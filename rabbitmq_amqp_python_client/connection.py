@@ -1,9 +1,8 @@
+from __future__ import annotations
+
 import logging
 from typing import (
-    Annotated,
-    Callable,
     Optional,
-    TypeVar,
     Union,
 )
 
@@ -15,6 +14,7 @@ from .entities import StreamOptions
 from .exceptions import ArgumentOutOfRangeException
 from .management import Management
 from .publisher import Publisher
+from .qpid.proton._handler import Handler
 from .qpid.proton._handlers import MessagingHandler
 from .qpid.proton._transport import SSLDomain
 from .qpid.proton.utils import BlockingConnection
@@ -29,9 +29,6 @@ from .ssl_configuration import (
 )
 
 logger = logging.getLogger(__name__)
-
-MT = TypeVar("MT")
-CB = Annotated[Callable[[MT], None], "Message callback type"]
 
 
 class Connection:
@@ -53,7 +50,7 @@ class Connection:
         ssl_context: Union[
             PosixSslConfigurationContext, WinSslConfigurationContext, None
         ] = None,
-        on_disconnection_handler: Optional[CB] = None,  # type: ignore
+        on_disconnection_handler: Optional[Handler] = None,
     ):
         """
          Initialize a new Connection instance.
@@ -82,10 +79,10 @@ class Connection:
             PosixSslConfigurationContext, WinSslConfigurationContext, None
         ] = ssl_context
         self._ssl_domain = None
-        self._connections = []  # type: ignore
+        self._connections: list[Connection] = []
         self._index: int = -1
 
-    def _set_environment_connection_list(self, connections: []):  # type: ignore
+    def _set_environment_connection_list(self, connections: list[Connection]) -> None:
         self._connections = connections
 
     def dial(self) -> None:
@@ -145,8 +142,8 @@ class Connection:
             url=self._addr,
             urls=self._addrs,
             ssl_domain=self._ssl_domain,
-            on_disconnection_handler=self._on_disconnection_handler,
         )
+        self._conn.add(self._on_disconnection_handler)
         self._open()
         logger.debug("Connection to the server established")
 

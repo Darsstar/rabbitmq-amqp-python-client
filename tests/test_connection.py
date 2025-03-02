@@ -5,6 +5,7 @@ from rabbitmq_amqp_python_client import (
     Environment,
     StreamSpecification,
 )
+from rabbitmq_amqp_python_client.qpid.proton import Event, Handler
 
 from .http_requests import delete_all_connections
 
@@ -75,20 +76,23 @@ def test_connection_reconnection() -> None:
     connection = None
     disconnected = False
 
-    def on_disconnected():
+    class DisconnectHandler(Handler):
+        def on_connection_remote_close(self, event: Event) -> None:
+            event.container.schedule(0, self)
 
-        nonlocal connection
+        def on_timer_task(self, event: Event) -> None:
+            nonlocal connection
 
-        # reconnect
-        if connection is not None:
-            connection = environment.connection()
-            connection.dial()
+            # reconnect
+            if connection is not None:
+                connection = environment.connection()
+                connection.dial()
 
-        nonlocal reconnected
-        reconnected = True
+            nonlocal reconnected
+            reconnected = True
 
     environment = Environment(
-        "amqp://guest:guest@localhost:5672/", on_disconnection_handler=on_disconnected
+        "amqp://guest:guest@localhost:5672/", on_disconnection_handler=DisconnectHandler()
     )
 
     connection = environment.connection()
@@ -114,8 +118,8 @@ def test_connection_reconnection() -> None:
     management = connection.management()
     management.declare_queue(queue_specification)
     management.delete_queue(stream_name)
-    environment.close()
     management.close()
+    environment.close()
 
     assert disconnected is True
     assert reconnected is True

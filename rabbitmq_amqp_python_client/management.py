@@ -14,7 +14,9 @@ from .entities import (
 )
 from .exceptions import ValidationCodeException
 from .options import ReceiverOption, SenderOption
-from .qpid.proton import Message, Sender, Link
+from .qpid.proton._delivery import Delivery
+from .qpid.proton._message import Message
+from .qpid.proton._endpoints import Sender, Link
 from .qpid.proton.utils import (
     BlockingConnection,
     BlockingReceiver,
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class ManagementMessage(Message):
     @wraps(Message.send)
-    def send(self, sender: 'Sender', tag: Optional[str] = None) -> 'Delivery':
+    def send(self, sender: 'Sender', tag: Optional[str] = None) -> Delivery:
         dlv = sender.delivery(tag or sender.delivery_tag())
 
         encoded = self.encode()

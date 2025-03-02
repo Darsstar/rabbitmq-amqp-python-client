@@ -1,23 +1,18 @@
 # For the moment this is just a Connection pooler to keep compatibility with other clients
 import logging
 from typing import (
-    Annotated,
-    Callable,
     Optional,
-    TypeVar,
     Union,
 )
 
 from .connection import Connection
+from .qpid.proton._handler import Handler
 from .ssl_configuration import (
     PosixSslConfigurationContext,
     WinSslConfigurationContext,
 )
 
 logger = logging.getLogger(__name__)
-
-MT = TypeVar("MT")
-CB = Annotated[Callable[[MT], None], "Message callback type"]
 
 
 class Environment:
@@ -40,7 +35,7 @@ class Environment:
         ssl_context: Union[
             PosixSslConfigurationContext, WinSslConfigurationContext, None
         ] = None,
-        on_disconnection_handler: Optional[CB] = None,  # type: ignore
+        on_disconnection_handler: Optional[Handler] = None,
     ):
         """
         Initialize a new Environment instance.
