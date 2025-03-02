@@ -486,25 +486,6 @@ class Message(object):
                 self._check(err)
                 return data
 
-    def encode_delete(self) -> bytes:
-        self._pre_encode()
-        sz = 16
-        while True:
-            err, data = pn_message_encode(self._msg, sz)
-            if err == PN_OVERFLOW:
-                sz *= 2
-                continue
-            else:
-                self._check(err)
-                # workaround because of: https://github.com/rabbitmq/rabbitmq-amqp-python-client/issues/1
-                if self.body is None:
-                    data[0] = 0
-                    data[1] = 83
-                    data[2] = 119
-                    data[3] = 64
-
-                return data
-
     def decode(self, data: bytes) -> None:
         self._check(pn_message_decode(self._msg, data))
         self._post_decode()
@@ -520,13 +501,7 @@ class Message(object):
         :return: The delivery associated with the sent message
         """
         dlv = sender.delivery(tag or sender.delivery_tag())
-
-        # workaround because of: https://github.com/rabbitmq/rabbitmq-amqp-python-client/issues/1
-        if sender.target.address == "/management":
-            encoded = self.encode_delete()
-        else:
-            encoded = self.encode()
-
+        encoded = self.encode()
         sender.stream(encoded)
         sender.advance()
         if sender.snd_settle_mode == Link.SND_SETTLED:

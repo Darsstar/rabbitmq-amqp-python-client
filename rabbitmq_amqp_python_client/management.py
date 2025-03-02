@@ -1,5 +1,6 @@
 import logging
 import uuid
+from functools import wraps
 from typing import Any, Optional, Union
 
 from .address_helper import AddressHelper
@@ -13,7 +14,7 @@ from .entities import (
 )
 from .exceptions import ValidationCodeException
 from .options import ReceiverOption, SenderOption
-from .qpid.proton._message import Message
+from .qpid.proton import Message, Sender, Link
 from .qpid.proton.utils import (
     BlockingConnection,
     BlockingReceiver,
@@ -27,6 +28,21 @@ from .queues import (
 
 logger = logging.getLogger(__name__)
 
+class ManagementMessage(Message):
+    @wraps(Message.send)
+    def send(self, sender: 'Sender', tag: Optional[str] = None) -> 'Delivery':
+        dlv = sender.delivery(tag or sender.delivery_tag())
+
+        encoded = self.encode()
+        # workaround because of: https://github.com/rabbitmq/rabbitmq-amqp-python-client/issues/1
+        if sender.target.address == CommonValues.management_node_address.value and self.body is None:
+            encoded = b"\x00\x53\x77\x40" + encoded[4:]
+
+        sender.stream(encoded)
+        sender.advance()
+        if sender.snd_settle_mode == Link.SND_SETTLED:
+            dlv.settle()
+        return dlv
 
 class Management:
     """
@@ -124,7 +140,8 @@ class Management:
         method: str,
         expected_response_codes: list[int],
     ) -> Message:
-        amq_message = Message(
+        # amq_message = Message(
+        amq_message = ManagementMessage(
             id=id,
             body=body,
             reply_to="$me",
