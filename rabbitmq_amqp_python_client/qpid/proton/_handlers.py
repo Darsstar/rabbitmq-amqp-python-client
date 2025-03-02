@@ -22,7 +22,6 @@ import logging
 import socket
 import time
 import weakref
-from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from ._condition import Condition
 from ._delivery import Delivery
@@ -35,11 +34,12 @@ from ._message import Message
 from ._selectable import Selectable
 from ._transport import Transport
 from ._url import Url
+from typing import Any, List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ._delivery import DispositionType
-    from ._endpoints import Receiver, Sender
     from ._reactor import Container, Transaction
+    from ._endpoints import Sender, Receiver
 
 log = logging.getLogger("proton")
 
@@ -61,12 +61,9 @@ class OutgoingMessageHandler(Handler):
         self.delegate = delegate
 
     def on_link_flow(self, event: Event):
-        if (
-            event.link.is_sender
-            and event.link.credit
-            and event.link.state & Endpoint.LOCAL_ACTIVE
-            and event.link.state & Endpoint.REMOTE_ACTIVE
-        ):
+        if event.link.is_sender and event.link.credit \
+                and event.link.state & Endpoint.LOCAL_ACTIVE \
+                and event.link.state & Endpoint.REMOTE_ACTIVE:
             self.on_sendable(event)
 
     def on_delivery(self, event: Event):
@@ -76,10 +73,7 @@ class OutgoingMessageHandler(Handler):
                 self.on_accepted(event)
             elif dlv.remote_state == Delivery.REJECTED:
                 self.on_rejected(event)
-            elif (
-                dlv.remote_state == Delivery.RELEASED
-                or dlv.remote_state == Delivery.MODIFIED
-            ):
+            elif dlv.remote_state == Delivery.RELEASED or dlv.remote_state == Delivery.MODIFIED:
                 self.on_released(event)
             if dlv.settled:
                 self.on_settled(event)
@@ -95,7 +89,7 @@ class OutgoingMessageHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_sendable", event)
+            _dispatch(self.delegate, 'on_sendable', event)
 
     def on_accepted(self, event: Event):
         """
@@ -105,7 +99,7 @@ class OutgoingMessageHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_accepted", event)
+            _dispatch(self.delegate, 'on_accepted', event)
 
     def on_rejected(self, event: Event):
         """
@@ -115,7 +109,7 @@ class OutgoingMessageHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_rejected", event)
+            _dispatch(self.delegate, 'on_rejected', event)
 
     def on_released(self, event: Event):
         """
@@ -127,7 +121,7 @@ class OutgoingMessageHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_released", event)
+            _dispatch(self.delegate, 'on_released', event)
 
     def on_settled(self, event: Event):
         """
@@ -139,7 +133,7 @@ class OutgoingMessageHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_settled", event)
+            _dispatch(self.delegate, 'on_settled', event)
 
 
 def recv_msg(delivery: Delivery) -> Message:
@@ -153,7 +147,6 @@ class Reject(ProtonException):
     """
     An exception that indicates a message should be rejected.
     """
-
     pass
 
 
@@ -161,7 +154,6 @@ class Release(ProtonException):
     """
     An exception that indicates a message should be released.
     """
-
     pass
 
 
@@ -218,9 +210,7 @@ class Acking(object):
         else:
             self.settle(delivery, Delivery.RELEASED)
 
-    def settle(
-        self, delivery: Delivery, state: Optional["DispositionType"] = None
-    ) -> None:
+    def settle(self, delivery: Delivery, state: Optional['DispositionType'] = None) -> None:
         """
         Settles the message delivery, and optionally updating the
         delivery state.
@@ -244,9 +234,7 @@ class IncomingMessageHandler(Handler, Acking):
     :param delegate: A client handler for the endpoint event
     """
 
-    def __init__(
-        self, auto_accept: bool = True, delegate: Optional[Handler] = None
-    ) -> None:
+    def __init__(self, auto_accept: bool = True, delegate: Optional[Handler] = None) -> None:
         self.delegate = delegate
         self.auto_accept = auto_accept
 
@@ -290,7 +278,7 @@ class IncomingMessageHandler(Handler, Acking):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_message", event)
+            _dispatch(self.delegate, 'on_message', event)
 
     def on_settled(self, event: Event):
         """
@@ -300,7 +288,7 @@ class IncomingMessageHandler(Handler, Acking):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_settled", event)
+            _dispatch(self.delegate, 'on_settled', event)
 
     def on_aborted(self, event: Event):
         """
@@ -310,7 +298,7 @@ class IncomingMessageHandler(Handler, Acking):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_aborted", event)
+            _dispatch(self.delegate, 'on_aborted', event)
 
 
 class EndpointStateHandler(Handler):
@@ -331,9 +319,7 @@ class EndpointStateHandler(Handler):
     :param delegate: A client handler for the endpoint event
     """
 
-    def __init__(
-        self, peer_close_is_error: bool = False, delegate: Optional[Handler] = None
-    ) -> None:
+    def __init__(self, peer_close_is_error: bool = False, delegate: Optional[Handler] = None) -> None:
         self.delegate = delegate
         self.peer_close_is_error = peer_close_is_error
 
@@ -407,9 +393,7 @@ class EndpointStateHandler(Handler):
             in the log message.
         """
         if endpoint.remote_condition:
-            log.error(
-                endpoint.remote_condition.description or endpoint.remote_condition.name
-            )
+            log.error(endpoint.remote_condition.description or endpoint.remote_condition.name)
         elif cls.is_local_open(endpoint) and cls.is_remote_closed(endpoint):
             log.error("%s closed by peer" % endpoint_type)
 
@@ -498,7 +482,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_connection_opened", event)
+            _dispatch(self.delegate, 'on_connection_opened', event)
 
     def on_session_opened(self, event: Event) -> None:
         """
@@ -509,7 +493,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_session_opened", event)
+            _dispatch(self.delegate, 'on_session_opened', event)
 
     def on_link_opened(self, event: Event) -> None:
         """
@@ -520,7 +504,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_link_opened", event)
+            _dispatch(self.delegate, 'on_link_opened', event)
 
     def on_connection_opening(self, event: Event) -> None:
         """
@@ -531,7 +515,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_connection_opening", event)
+            _dispatch(self.delegate, 'on_connection_opening', event)
 
     def on_session_opening(self, event: Event) -> None:
         """
@@ -542,7 +526,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_session_opening", event)
+            _dispatch(self.delegate, 'on_session_opening', event)
 
     def on_link_opening(self, event: Event) -> None:
         """
@@ -553,7 +537,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_link_opening", event)
+            _dispatch(self.delegate, 'on_link_opening', event)
 
     def on_connection_error(self, event: Event) -> None:
         """
@@ -563,7 +547,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_connection_error", event)
+            _dispatch(self.delegate, 'on_connection_error', event)
         else:
             self.print_error(event.connection, "connection")
 
@@ -575,7 +559,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_session_error", event)
+            _dispatch(self.delegate, 'on_session_error', event)
         else:
             self.print_error(event.session, "session")
             event.connection.close()
@@ -588,7 +572,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_link_error", event)
+            _dispatch(self.delegate, 'on_link_error', event)
         else:
             self.print_error(event.link, "link")
             event.connection.close()
@@ -602,7 +586,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_connection_closed", event)
+            _dispatch(self.delegate, 'on_connection_closed', event)
 
     def on_session_closed(self, event: Event) -> None:
         """
@@ -613,7 +597,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_session_closed", event)
+            _dispatch(self.delegate, 'on_session_closed', event)
 
     def on_link_closed(self, event: Event) -> None:
         """
@@ -624,7 +608,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_link_closed", event)
+            _dispatch(self.delegate, 'on_link_closed', event)
 
     def on_connection_closing(self, event: Event) -> None:
         """
@@ -635,7 +619,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_connection_closing", event)
+            _dispatch(self.delegate, 'on_connection_closing', event)
         elif self.peer_close_is_error:
             self.on_connection_error(event)
 
@@ -648,7 +632,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_session_closing", event)
+            _dispatch(self.delegate, 'on_session_closing', event)
         elif self.peer_close_is_error:
             self.on_session_error(event)
 
@@ -661,7 +645,7 @@ class EndpointStateHandler(Handler):
             information on the event.
         """
         if self.delegate is not None:
-            _dispatch(self.delegate, "on_link_closing", event)
+            _dispatch(self.delegate, 'on_link_closing', event)
         elif self.peer_close_is_error:
             self.on_link_error(event)
 
@@ -683,12 +667,8 @@ class EndpointStateHandler(Handler):
         :param event: The underlying event object. Use this to obtain further
             information on the event.
         """
-        if (
-            self.delegate is not None
-            and event.connection
-            and self.is_local_open(event.connection)
-        ):
-            _dispatch(self.delegate, "on_disconnected", event)
+        if self.delegate is not None and event.connection and self.is_local_open(event.connection):
+            _dispatch(self.delegate, 'on_disconnected', event)
 
 
 class MessagingHandler(Handler, Acking):
@@ -709,18 +689,16 @@ class MessagingHandler(Handler, Acking):
     """
 
     def __init__(
-        self,
-        prefetch: int = 10,
-        auto_accept: bool = False,
-        auto_settle: bool = True,
-        peer_close_is_error: bool = False,
+            self,
+            prefetch: int = 10,
+            auto_accept: bool = False,
+            auto_settle: bool = True,
+            peer_close_is_error: bool = False
     ) -> None:
         self.handlers = []
         if prefetch:
             self.handlers.append(FlowController(prefetch))
-        self.handlers.append(
-            EndpointStateHandler(peer_close_is_error, weakref.proxy(self))
-        )
+        self.handlers.append(EndpointStateHandler(peer_close_is_error, weakref.proxy(self)))
         self.handlers.append(IncomingMessageHandler(auto_accept, weakref.proxy(self)))
         self.handlers.append(OutgoingMessageHandler(auto_settle, weakref.proxy(self)))
         self.fatal_conditions = ["amqp:unauthorized-access"]
@@ -736,22 +714,11 @@ class MessagingHandler(Handler, Acking):
         """
         if event.transport.condition:
             if event.transport.condition.info:
-                log.error(
-                    "%s: %s: %s"
-                    % (
-                        event.transport.condition.name,
-                        event.transport.condition.description,
-                        event.transport.condition.info,
-                    )
-                )
+                log.error("%s: %s: %s" % (
+                    event.transport.condition.name, event.transport.condition.description,
+                    event.transport.condition.info))
             else:
-                log.error(
-                    "%s: %s"
-                    % (
-                        event.transport.condition.name,
-                        event.transport.condition.description,
-                    )
-                )
+                log.error("%s: %s" % (event.transport.condition.name, event.transport.condition.description))
             if event.transport.condition.name in self.fatal_conditions:
                 event.connection.close()
         else:
@@ -794,7 +761,7 @@ class MessagingHandler(Handler, Acking):
         :param event: The underlying event object. Use this to obtain further
             information on the event.
         """
-        if hasattr(event.reactor, "subclass"):
+        if hasattr(event.reactor, 'subclass'):
             setattr(event, event.reactor.subclass.__name__.lower(), event.reactor)
         self.on_start(event)
 
@@ -1010,17 +977,15 @@ class TransactionalClientHandler(MessagingHandler, TransactionHandler):
     """
 
     def __init__(
-        self,
-        prefetch: int = 10,
-        auto_accept: bool = False,
-        auto_settle: bool = True,
-        peer_close_is_error: bool = False,
+            self,
+            prefetch: int = 10,
+            auto_accept: bool = False,
+            auto_settle: bool = True,
+            peer_close_is_error: bool = False
     ) -> None:
-        super(TransactionalClientHandler, self).__init__(
-            prefetch, auto_accept, auto_settle, peer_close_is_error
-        )
+        super(TransactionalClientHandler, self).__init__(prefetch, auto_accept, auto_settle, peer_close_is_error)
 
-    def accept(self, delivery: Delivery, transaction: Optional["Transaction"] = None):
+    def accept(self, delivery: Delivery, transaction: Optional['Transaction'] = None):
         """
         A convenience method for accepting a received message as part of a
         transaction. If no transaction object is supplied, a regular
@@ -1054,7 +1019,7 @@ class FlowController(Handler):
     def on_delivery(self, event: Event) -> None:
         self._flow(event.link)
 
-    def _flow(self, link: Union["Sender", "Receiver"]) -> None:
+    def _flow(self, link: Union['Sender', 'Receiver']) -> None:
         if link.is_receiver:
             self._drained += link.drained()
             if self._drained == 0:
@@ -1063,6 +1028,7 @@ class FlowController(Handler):
 
 
 class Handshaker(Handler):
+
     @staticmethod
     def on_connection_remote_open(event: Event) -> None:
         conn = event.connection
@@ -1108,6 +1074,7 @@ CHandshaker = Handshaker
 
 
 class PythonIO:
+
     def __init__(self) -> None:
         self.selectables = []
         self.delegate = IOHandler()
@@ -1172,6 +1139,7 @@ class PythonIO:
 
 # For C style IO handler need to implement Selector
 class IOHandler(Handler):
+
     def __init__(self) -> None:
         self._selector = IO.Selector()
 
@@ -1196,10 +1164,10 @@ class IOHandler(Handler):
         if not r.quiesced:
             return
 
-        r.timer_deadline
+        d = r.timer_deadline
         readable, writable, expired = self._selector.select(r.timeout)
 
-        r.mark()
+        now = r.mark()
 
         for s in readable:
             s.readable()
@@ -1224,7 +1192,7 @@ class IOHandler(Handler):
             try:
                 b = s.recv(capacity)
                 if len(b) > 0:
-                    t.push(b)
+                    n = t.push(b)
                 else:
                     # EOF handling
                     self.on_selectable_error(event)
@@ -1249,6 +1217,7 @@ class IOHandler(Handler):
 
         pending = t.pending()
         if pending > 0:
+
             try:
                 n = s.send(t.peek(pending))
                 t.pop(n)
@@ -1373,12 +1342,12 @@ class IOHandler(Handler):
 
 class ConnectSelectable(Selectable):
     def __init__(
-        self,
-        sock: socket.socket,
-        reactor: "Container",
-        addrs: List[Any],
-        transport: Transport,
-        iohandler: IOHandler,
+            self,
+            sock: socket.socket,
+            reactor: 'Container',
+            addrs: List[Any],
+            transport: Transport,
+            iohandler: IOHandler
     ) -> None:
         super(ConnectSelectable, self).__init__(sock, reactor)
         self.writing = True
@@ -1416,22 +1385,15 @@ class ConnectSelectable(Selectable):
             return
         elif e == errno.ECONNREFUSED:
             if len(self._addrs) > 0:
-                log.debug(
-                    "Connection refused: trying next transport address: %s",
-                    self._addrs[0],
-                )
+                log.debug("Connection refused: trying next transport address: %s", self._addrs[0])
 
                 sock = IO.connect(self._addrs[0])
                 # New ConnectSelectable for the new socket with rest of addresses
-                ConnectSelectable(
-                    sock, self._reactor, self._addrs[1:], t, self._iohandler
-                )
+                ConnectSelectable(sock, self._reactor, self._addrs[1:], t, self._iohandler)
                 return
             else:
                 log.debug("Connection refused, but tried all transport addresses")
-                t.condition = Condition(
-                    "proton.pythonio", "Connection refused to all addresses"
-                )
+                t.condition = Condition("proton.pythonio", "Connection refused to all addresses")
         else:
             log.error("Couldn't connect: %s", e)
             t.condition = Condition("proton.pythonio", "Connection error: %s" % e)

@@ -17,42 +17,27 @@
 # under the License.
 #
 
-from ._reactor import (
-    ApplicationEvent,
-    AtLeastOnce,
-    AtMostOnce,
-    Backoff,
-    Container,
-    Copy,
-    DurableSubscription,
-    DynamicNodeProperties,
-    EventInjector,
-    Filter,
-    Handler,
-    LinkOption,
-    Move,
-    ReceiverOption,
-    Selector,
-    SenderOption,
-    Transaction,
-)
+from ._reactor import Container, ApplicationEvent, EventInjector, Handler,\
+    LinkOption, ReceiverOption, SenderOption,\
+    AtLeastOnce, AtMostOnce, DynamicNodeProperties, Filter, Selector, \
+    DurableSubscription, Copy, Move, Backoff, Transaction
 
 __all__ = [
-    "Container",
-    "ApplicationEvent",
-    "EventInjector",
-    "Handler",
-    "LinkOption",
-    "ReceiverOption",
-    "SenderOption",
-    "AtLeastOnce",
-    "AtMostOnce",
-    "DynamicNodeProperties",
-    "Filter",
-    "Selector",
-    "DurableSubscription",
-    "Copy",
-    "Move",
-    "Backoff",
-    "Transaction",
+    'Container',
+    'ApplicationEvent',
+    'EventInjector',
+    'Handler',
+    'LinkOption',
+    'ReceiverOption',
+    'SenderOption',
+    'AtLeastOnce',
+    'AtMostOnce',
+    'DynamicNodeProperties',
+    'Filter',
+    'Selector',
+    'DurableSubscription',
+    'Copy',
+    'Move',
+    'Backoff',
+    'Transaction'
 ]

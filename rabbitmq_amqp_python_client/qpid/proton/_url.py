@@ -18,12 +18,8 @@
 #
 
 import socket
-from urllib.parse import (
-    quote,
-    unquote,
-    urlparse,
-    urlunparse,
-)
+
+from urllib.parse import urlparse, urlunparse, quote, unquote
 
 
 class Url(object):
@@ -76,7 +72,7 @@ class Url(object):
             :param value: integer port number or string service name.
             """
             port = super(Url.Port, cls).__new__(cls, cls._port_int(value))
-            setattr(port, "name", str(value))
+            setattr(port, 'name', str(value))
             return port
 
         def __eq__(self, x):
@@ -103,9 +99,7 @@ class Url(object):
                     elif value == Url.AMQP:
                         return 5672
                     else:
-                        raise ValueError(
-                            "Not a valid port number or service name: '%s'" % value
-                        )
+                        raise ValueError("Not a valid port number or service name: '%s'" % value)
 
     def __init__(self, url=None, defaults=True, **kwargs):
         if isinstance(url, Url):
@@ -119,10 +113,10 @@ class Url(object):
             self._query = url._query
             self._fragment = url._fragment
         elif url:
-            if not url.startswith("//"):
-                p = url.partition(":")
-                if "/" in p[0] or not p[2].startswith("//"):
-                    url = "//" + url
+            if not url.startswith('//'):
+                p = url.partition(':')
+                if '/' in p[0] or not p[2].startswith('//'):
+                    url = '//' + url
             u = urlparse(url)
             if not u:
                 raise ValueError("Invalid URL '%s'" % url)
@@ -152,17 +146,17 @@ class Url(object):
 
     @staticmethod
     def _parse_host_port(nl):
-        hostport = nl.split("@")[-1]
-        hostportsplit = hostport.split("]")
+        hostport = nl.split('@')[-1]
+        hostportsplit = hostport.split(']')
         beforebrace = hostportsplit[0]
         afterbrace = hostportsplit[-1]
 
         if len(hostportsplit) == 1:
-            beforebrace = ""
+            beforebrace = ''
         else:
-            beforebrace += "]"
-        if ":" in afterbrace:
-            afterbracesplit = afterbrace.split(":")
+            beforebrace += ']'
+        if ':' in afterbrace:
+            afterbracesplit = afterbrace.split(':')
             port = afterbracesplit[1]
             host = (beforebrace + afterbracesplit[0]).lower()
             if not port:
@@ -181,15 +175,15 @@ class Url(object):
 
         :type: ``str``
         """
-        return self._path if not self._path or self._path[0] != "/" else self._path[1:]
+        return self._path if not self._path or self._path[0] != '/' else self._path[1:]
 
     @path.setter
     def path(self, p):
-        self._path = p if p[0] == "/" else "/" + p
+        self._path = p if p[0] == '/' else '/' + p
 
     @staticmethod
     def _ipv6literal(s):
-        return s.startswith("[") and s.endswith("]")
+        return s.startswith('[') and s.endswith(']')
 
     @property
     def host(self):
@@ -205,8 +199,8 @@ class Url(object):
 
     @host.setter
     def host(self, h):
-        if ":" in h and not self._ipv6literal(h):
-            self._host = "[" + h + "]"
+        if ':' in h and not self._ipv6literal(h):
+            self._host = '[' + h + ']'
         else:
             self._host = h
 
@@ -225,42 +219,29 @@ class Url(object):
 
     @property
     def _netloc(self):
-        hostport = ""
+        hostport = ''
         if self._host:
             hostport = self._host
         if self._port:
-            hostport += ":"
+            hostport += ':'
             hostport += str(self._port)
-        userpart = ""
+        userpart = ''
         if self.username:
             userpart += quote(self.username)
         if self.password:
-            userpart += ":"
+            userpart += ':'
             userpart += quote(self.password)
         if self.username or self.password:
-            userpart += "@"
+            userpart += '@'
         return userpart + hostport
 
     def __str__(self):
-        if (
-            self.scheme
-            and not self._netloc
-            and not self._path
-            and not self._params
-            and not self._query
-            and not self._fragment
-        ):
-            return self.scheme + "://"
-        return urlunparse(
-            (
-                self.scheme or "",
-                self._netloc or "",
-                self._path or "",
-                self._params or "",
-                self._query or "",
-                self._fragment or "",
-            )
-        )
+        if self.scheme \
+                and not self._netloc and not self._path \
+                and not self._params and not self._query and not self._fragment:
+            return self.scheme + '://'
+        return urlunparse((self.scheme or '', self._netloc or '', self._path or '',
+                           self._params or '', self._query or '', self._fragment or ''))
 
     def __repr__(self):
         return "Url('%s')" % self
@@ -277,6 +258,6 @@ class Url(object):
         :return: self
         """
         self.scheme = self.scheme or self.AMQP
-        self._host = self._host or "0.0.0.0"
+        self._host = self._host or '0.0.0.0'
         self._port = self._port or self.Port(self.scheme)
         return self

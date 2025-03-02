@@ -17,108 +17,53 @@
 # under the License.
 #
 
-from enum import IntEnum
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    List,
-    Optional,
-    Union,
-)
-
-from cproton import (
-    PN_ACCEPTED,
-    PN_MODIFIED,
-    PN_RECEIVED,
-    PN_REJECTED,
-    PN_RELEASED,
-    isnull,
-    pn_delivery_abort,
-    pn_delivery_aborted,
-    pn_delivery_attachments,
-    pn_delivery_link,
-    pn_delivery_local,
-    pn_delivery_local_state,
-    pn_delivery_partial,
-    pn_delivery_pending,
-    pn_delivery_readable,
-    pn_delivery_remote,
-    pn_delivery_remote_state,
-    pn_delivery_settle,
-    pn_delivery_settled,
-    pn_delivery_tag,
-    pn_delivery_update,
-    pn_delivery_updated,
-    pn_delivery_writable,
-    pn_disposition_annotations,
-    pn_disposition_condition,
-    pn_disposition_data,
-    pn_disposition_get_section_number,
-    pn_disposition_get_section_offset,
-    pn_disposition_is_failed,
-    pn_disposition_is_undeliverable,
-    pn_disposition_set_failed,
-    pn_disposition_set_section_number,
-    pn_disposition_set_section_offset,
-    pn_disposition_set_undeliverable,
-    pn_disposition_type,
-)
+from cproton import PN_ACCEPTED, PN_MODIFIED, PN_RECEIVED, PN_REJECTED, PN_RELEASED, pn_delivery_abort, \
+    pn_delivery_aborted, pn_delivery_attachments, pn_delivery_link, pn_delivery_local, pn_delivery_local_state, \
+    pn_delivery_partial, pn_delivery_pending, pn_delivery_readable, pn_delivery_remote, pn_delivery_remote_state, \
+    pn_delivery_settle, pn_delivery_settled, pn_delivery_tag, pn_delivery_update, pn_delivery_updated, \
+    pn_delivery_writable, pn_disposition_annotations, pn_disposition_condition, pn_disposition_data, \
+    pn_disposition_get_section_number, pn_disposition_get_section_offset, pn_disposition_is_failed, \
+    pn_disposition_is_undeliverable, pn_disposition_set_failed, pn_disposition_set_section_number, \
+    pn_disposition_set_section_offset, pn_disposition_set_undeliverable, pn_disposition_type, \
+    isnull
 
 from ._condition import cond2obj, obj2cond
 from ._data import dat2obj, obj2dat
 from ._wrapper import Wrapper
 
+from typing import Dict, List, Optional, Type, Union, TYPE_CHECKING, Any
+
 if TYPE_CHECKING:
     from ._condition import Condition
     from ._data import PythonAMQPData, symbol
-    from ._endpoints import (  # circular import
-        Receiver,
-        Sender,
-    )
+    from ._endpoints import Receiver, Sender  # circular import
     from ._reactor import Connection, Session, Transport
 
 
-class DispositionType(IntEnum):
-    RECEIVED = PN_RECEIVED
-    """
-    A non terminal state indicating how much (if any) message data
-    has been received for a delivery.
-    """
+class NamedInt(int):
+    values: Dict[int, 'DispositionType'] = {}
 
-    ACCEPTED = PN_ACCEPTED
-    """
-    A terminal state indicating that the delivery was successfully
-    processed. Once in this state there will be no further state
-    changes prior to the delivery being settled.
-    """
+    def __new__(cls: Type['DispositionType'], i: int, name: str) -> 'DispositionType':
+        ni = super(NamedInt, cls).__new__(cls, i)
+        cls.values[i] = ni
+        return ni
 
-    REJECTED = PN_REJECTED
-    """
-    A terminal state indicating that the delivery could not be
-    processed due to some error condition. Once in this state
-    there will be no further state changes prior to the delivery
-    being settled.
-    """
+    def __init__(self, i: int, name: str) -> None:
+        self.name = name
 
-    RELEASED = PN_RELEASED
-    """
-    A terminal state indicating that the delivery is being
-    returned to the sender. Once in this state there will be no
-    further state changes prior to the delivery being settled.
-    """
+    def __repr__(self) -> str:
+        return self.name
 
-    MODIFIED = PN_MODIFIED
-    """
-    A terminal state indicating that the delivery is being
-    returned to the sender and should be annotated by the
-    sender prior to further delivery attempts. Once in this
-    state there will be no further state changes prior to the
-    delivery being settled.
-    """
+    def __str__(self) -> str:
+        return self.name
 
     @classmethod
-    def or_int(cls, i: int) -> Union[int, "DispositionType"]:
-        return cls(i) if i in cls._value2member_map_ else i
+    def get(cls, i: int) -> Union[int, 'DispositionType']:
+        return cls.values.get(i, i)
+
+
+class DispositionType(NamedInt):
+    values = {}
 
 
 class Disposition(object):
@@ -132,11 +77,42 @@ class Disposition(object):
     state of the delivery.
     """
 
-    RECEIVED = DispositionType.RECEIVED
-    ACCEPTED = DispositionType.ACCEPTED
-    REJECTED = DispositionType.REJECTED
-    RELEASED = DispositionType.RELEASED
-    MODIFIED = DispositionType.MODIFIED
+    RECEIVED = DispositionType(PN_RECEIVED, "RECEIVED")
+    """
+    A non terminal state indicating how much (if any) message data
+    has been received for a delivery.
+    """
+
+    ACCEPTED = DispositionType(PN_ACCEPTED, "ACCEPTED")
+    """
+    A terminal state indicating that the delivery was successfully
+    processed. Once in this state there will be no further state
+    changes prior to the delivery being settled.
+    """
+
+    REJECTED = DispositionType(PN_REJECTED, "REJECTED")
+    """
+    A terminal state indicating that the delivery could not be
+    processed due to some error condition. Once in this state
+    there will be no further state changes prior to the delivery
+    being settled.
+    """
+
+    RELEASED = DispositionType(PN_RELEASED, "RELEASED")
+    """
+    A terminal state indicating that the delivery is being
+    returned to the sender. Once in this state there will be no
+    further state changes prior to the delivery being settled.
+    """
+
+    MODIFIED = DispositionType(PN_MODIFIED, "MODIFIED")
+    """
+    A terminal state indicating that the delivery is being
+    returned to the sender and should be annotated by the
+    sender prior to further delivery attempts. Once in this
+    state there will be no further state changes prior to the
+    delivery being settled.
+    """
 
     def __init__(self, impl, local):
         self._impl = impl
@@ -158,7 +134,7 @@ class Disposition(object):
         * :const:`RELEASED`
         * :const:`MODIFIED`
         """
-        return DispositionType.or_int(pn_disposition_type(self._impl))
+        return DispositionType.get(pn_disposition_type(self._impl))
 
     @property
     def section_number(self) -> int:
@@ -223,7 +199,7 @@ class Disposition(object):
             raise AttributeError("data attribute is read-only")
 
     @property
-    def annotations(self) -> Optional[Dict["symbol", "PythonAMQPData"]]:
+    def annotations(self) -> Optional[Dict['symbol', 'PythonAMQPData']]:
         """The annotations associated with a disposition.
 
         The :class:`Data` object retrieved by this operation may be modified
@@ -242,14 +218,14 @@ class Disposition(object):
             return dat2obj(pn_disposition_annotations(self._impl))
 
     @annotations.setter
-    def annotations(self, obj: Dict[str, "PythonAMQPData"]) -> None:
+    def annotations(self, obj: Dict[str, 'PythonAMQPData']) -> None:
         if self.local:
             self._annotations = obj
         else:
             raise AttributeError("annotations attribute is read-only")
 
     @property
-    def condition(self) -> Optional["Condition"]:
+    def condition(self) -> Optional['Condition']:
         """The condition object associated with a disposition.
 
         The :class:`Condition` object retrieved by this operation may be
@@ -264,7 +240,7 @@ class Disposition(object):
             return cond2obj(pn_disposition_condition(self._impl))
 
     @condition.setter
-    def condition(self, obj: "Condition") -> None:
+    def condition(self, obj: 'Condition') -> None:
         if self.local:
             self._condition = obj
         else:
@@ -387,14 +363,14 @@ class Delivery(Wrapper):
         return pn_delivery_partial(self._impl)
 
     @property
-    def local_state(self) -> Union[int, DispositionType]:
+    def local_state(self) -> DispositionType:
         """A local state of the delivery."""
-        return DispositionType.or_int(pn_delivery_local_state(self._impl))
+        return DispositionType.get(pn_delivery_local_state(self._impl))
 
     @property
     def remote_state(self) -> Union[int, DispositionType]:
         """A remote state of the delivery as indicated by the remote peer."""
-        return DispositionType.or_int(pn_delivery_remote_state(self._impl))
+        return DispositionType.get(pn_delivery_remote_state(self._impl))
 
     @property
     def settled(self) -> bool:
@@ -428,30 +404,29 @@ class Delivery(Wrapper):
         pn_delivery_abort(self._impl)
 
     @property
-    def link(self) -> Union["Receiver", "Sender"]:
+    def link(self) -> Union['Receiver', 'Sender']:
         """
         The :class:`Link` on which the delivery was sent or received.
         """
         from . import _endpoints
-
         return _endpoints.Link.wrap(pn_delivery_link(self._impl))
 
     @property
-    def session(self) -> "Session":
+    def session(self) -> 'Session':
         """
         The :class:`Session` over which the delivery was sent or received.
         """
         return self.link.session
 
     @property
-    def connection(self) -> "Connection":
+    def connection(self) -> 'Connection':
         """
         The :class:`Connection` over which the delivery was sent or received.
         """
         return self.session.connection
 
     @property
-    def transport(self) -> "Transport":
+    def transport(self) -> 'Transport':
         """
         The :class:`Transport` bound to the :class:`Connection` over which
         the delivery was sent or received.

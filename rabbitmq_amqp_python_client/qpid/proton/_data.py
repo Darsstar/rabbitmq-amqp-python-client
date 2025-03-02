@@ -18,18 +18,7 @@
 #
 
 import uuid
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
-
+from typing import Callable, List, Tuple, Union, Optional, Any, Dict, Iterable, TypeVar
 try:
     from typing import Literal
 except ImportError:
@@ -41,132 +30,39 @@ except ImportError:
     class Literal(metaclass=GenericMeta):  # type: ignore[no-redef]
         pass
 
-
-from cproton import (
-    PN_ARRAY,
-    PN_BINARY,
-    PN_BOOL,
-    PN_BYTE,
-    PN_CHAR,
-    PN_DECIMAL32,
-    PN_DECIMAL64,
-    PN_DECIMAL128,
-    PN_DESCRIBED,
-    PN_DOUBLE,
-    PN_FLOAT,
-    PN_INT,
-    PN_LIST,
-    PN_LONG,
-    PN_MAP,
-    PN_NULL,
-    PN_OVERFLOW,
-    PN_SHORT,
-    PN_STRING,
-    PN_SYMBOL,
-    PN_TIMESTAMP,
-    PN_UBYTE,
-    PN_UINT,
-    PN_ULONG,
-    PN_USHORT,
-    PN_UUID,
-    pn_data,
-    pn_data_clear,
-    pn_data_copy,
-    pn_data_decode,
-    pn_data_dump,
-    pn_data_encode,
-    pn_data_encoded_size,
-    pn_data_enter,
-    pn_data_error,
-    pn_data_exit,
-    pn_data_format,
-    pn_data_free,
-    pn_data_get_array,
-    pn_data_get_array_type,
-    pn_data_get_binary,
-    pn_data_get_bool,
-    pn_data_get_byte,
-    pn_data_get_char,
-    pn_data_get_decimal32,
-    pn_data_get_decimal64,
-    pn_data_get_decimal128,
-    pn_data_get_double,
-    pn_data_get_float,
-    pn_data_get_int,
-    pn_data_get_list,
-    pn_data_get_long,
-    pn_data_get_map,
-    pn_data_get_short,
-    pn_data_get_string,
-    pn_data_get_symbol,
-    pn_data_get_timestamp,
-    pn_data_get_ubyte,
-    pn_data_get_uint,
-    pn_data_get_ulong,
-    pn_data_get_ushort,
-    pn_data_get_uuid,
-    pn_data_is_array_described,
-    pn_data_is_described,
-    pn_data_is_null,
-    pn_data_lookup,
-    pn_data_narrow,
-    pn_data_next,
-    pn_data_prev,
-    pn_data_put_array,
-    pn_data_put_binary,
-    pn_data_put_bool,
-    pn_data_put_byte,
-    pn_data_put_char,
-    pn_data_put_decimal32,
-    pn_data_put_decimal64,
-    pn_data_put_decimal128,
-    pn_data_put_described,
-    pn_data_put_double,
-    pn_data_put_float,
-    pn_data_put_int,
-    pn_data_put_list,
-    pn_data_put_long,
-    pn_data_put_map,
-    pn_data_put_null,
-    pn_data_put_short,
-    pn_data_put_string,
-    pn_data_put_symbol,
-    pn_data_put_timestamp,
-    pn_data_put_ubyte,
-    pn_data_put_uint,
-    pn_data_put_ulong,
-    pn_data_put_ushort,
-    pn_data_put_uuid,
-    pn_data_rewind,
-    pn_data_type,
-    pn_data_widen,
-    pn_error_text,
-)
+from cproton import PN_ARRAY, PN_BINARY, PN_BOOL, PN_BYTE, PN_CHAR, PN_DECIMAL128, PN_DECIMAL32, PN_DECIMAL64, \
+    PN_DESCRIBED, PN_DOUBLE, PN_FLOAT, PN_INT, PN_LIST, PN_LONG, PN_MAP, PN_NULL, PN_OVERFLOW, PN_SHORT, PN_STRING, \
+    PN_SYMBOL, PN_TIMESTAMP, PN_UBYTE, PN_UINT, PN_ULONG, PN_USHORT, PN_UUID, pn_data, pn_data_clear, pn_data_copy, \
+    pn_data_decode, pn_data_dump, pn_data_encode, pn_data_encoded_size, pn_data_enter, pn_data_error, pn_data_exit, \
+    pn_data_format, pn_data_free, pn_data_get_array, pn_data_get_array_type, pn_data_get_binary, pn_data_get_bool, \
+    pn_data_get_byte, pn_data_get_char, pn_data_get_decimal128, pn_data_get_decimal32, pn_data_get_decimal64, \
+    pn_data_get_double, pn_data_get_float, pn_data_get_int, pn_data_get_list, pn_data_get_long, pn_data_get_map, \
+    pn_data_get_short, pn_data_get_string, pn_data_get_symbol, pn_data_get_timestamp, pn_data_get_ubyte, \
+    pn_data_get_uint, pn_data_get_ulong, pn_data_get_ushort, pn_data_get_uuid, pn_data_is_array_described, \
+    pn_data_is_described, pn_data_is_null, pn_data_lookup, pn_data_narrow, pn_data_next, pn_data_prev, \
+    pn_data_put_array, pn_data_put_binary, pn_data_put_bool, pn_data_put_byte, pn_data_put_char, pn_data_put_decimal128, \
+    pn_data_put_decimal32, pn_data_put_decimal64, pn_data_put_described, pn_data_put_double, pn_data_put_float, \
+    pn_data_put_int, pn_data_put_list, pn_data_put_long, pn_data_put_map, pn_data_put_null, pn_data_put_short, \
+    pn_data_put_string, pn_data_put_symbol, pn_data_put_timestamp, pn_data_put_ubyte, pn_data_put_uint, \
+    pn_data_put_ulong, pn_data_put_ushort, pn_data_put_uuid, pn_data_rewind, pn_data_type, pn_data_widen, pn_error_text
 
 from ._common import Constant
-from ._exceptions import EXCEPTIONS, DataException
+from ._exceptions import DataException, EXCEPTIONS
 
 long = int
 unicode = str
 
-_T = TypeVar("_T")
+_T = TypeVar('_T')
 
 PythonAMQPData = Union[
-    Dict["PythonAMQPData", "PythonAMQPData"],
-    List["PythonAMQPData"],
-    "Described",
-    "Array",
-    int,
-    str,
-    "symbol",
-    bytes,
-    float,
-    None,
-]
+    Dict['PythonAMQPData', 'PythonAMQPData'],
+    List['PythonAMQPData'],
+    'Described', 'Array', int, str, 'symbol', bytes, float, None]
 """This type annotation represents Python data structures that can be encoded as AMQP Data"""
 
 
 class UnmappedType:
+
     def __init__(self, msg: str) -> None:
         self.msg = msg
 
@@ -181,10 +77,10 @@ class ulong(long):
     An unsigned 64 bit integer in the range :math:`0` to :math:`2^{64} - 1` inclusive.
     """
 
-    def __init__(self, u64: int) -> None:
-        if u64 < 0:
+    def __init__(self, l: int) -> None:
+        if l < 0:
             raise AssertionError("initializing ulong with negative value")
-        super(ulong, self).__new__(ulong, u64)
+        super(ulong, self).__new__(ulong, l)
 
     def __repr__(self) -> str:
         return "ulong(%s)" % long.__repr__(self)
@@ -298,10 +194,10 @@ class uint(long):
     A 32 bit unsigned integer in the range :math:`0` to :math:`2^{32} - 1` inclusive.
     """
 
-    def __init__(self, u32: int) -> None:
-        if u32 < 0:
+    def __init__(self, l: int) -> None:
+        if l < 0:
             raise AssertionError("initializing uint with negative value")
-        super(uint, self).__new__(uint, u32)
+        super(uint, self).__new__(uint, l)
 
     def __repr__(self) -> str:
         return "uint(%s)" % long.__repr__(self)
@@ -360,9 +256,9 @@ class Described(object):
     """
 
     def __init__(
-        self,
-        descriptor: PythonAMQPData,
-        value: PythonAMQPData,
+            self,
+            descriptor: PythonAMQPData,
+            value: PythonAMQPData,
     ) -> None:
         self.descriptor = descriptor
         self.value = value
@@ -394,7 +290,12 @@ class Array(object):
     :ivar elements: A Python list of elements of the appropriate type.
     """
 
-    def __init__(self, descriptor: PythonAMQPData, type: int, *elements) -> None:
+    def __init__(
+            self,
+            descriptor: PythonAMQPData,
+            type: int,
+            *elements
+    ) -> None:
         self.descriptor = descriptor
         self.type = type
         self.elements = elements
@@ -411,17 +312,16 @@ class Array(object):
 
     def __eq__(self, o: Any) -> bool:
         if isinstance(o, Array):
-            return (
-                self.descriptor == o.descriptor
-                and self.type == o.type
-                and self.elements == o.elements
-            )
+            return self.descriptor == o.descriptor and \
+                self.type == o.type and self.elements == o.elements
         else:
             return False
 
 
 def _check_type(
-    s: _T, allow_ulong: bool = False, raise_on_error: bool = True
+        s: _T,
+        allow_ulong: bool = False,
+        raise_on_error: bool = True
 ) -> Union[symbol, ulong, _T]:
     if isinstance(s, symbol):
         return s
@@ -430,7 +330,7 @@ def _check_type(
     if isinstance(s, str):
         return symbol(s)
     if raise_on_error:
-        raise TypeError("Non-symbol type %s: %s" % (type(s), s))
+        raise TypeError('Non-symbol type %s: %s' % (type(s), s))
     return s
 
 
@@ -438,9 +338,7 @@ def _check_is_symbol(s: _T, raise_on_error: bool = True) -> Union[symbol, ulong,
     return _check_type(s, allow_ulong=False, raise_on_error=raise_on_error)
 
 
-def _check_is_symbol_or_ulong(
-    s: _T, raise_on_error: bool = True
-) -> Union[symbol, ulong, _T]:
+def _check_is_symbol_or_ulong(s: _T, raise_on_error: bool = True) -> Union[symbol, ulong, _T]:
     return _check_type(s, allow_ulong=True, raise_on_error=raise_on_error)
 
 
@@ -448,11 +346,11 @@ class RestrictedKeyDict(dict):
     """Parent class for :class:`PropertyDict` and :class:`AnnotationDict`"""
 
     def __init__(
-        self,
-        validation_fn: Callable[[_T, bool], _T],
-        e: Optional[Any] = None,
-        raise_on_error: bool = True,
-        **kwargs
+            self,
+            validation_fn: Callable[[_T, bool], _T],
+            e: Optional[Any] = None,
+            raise_on_error: bool = True,
+            **kwargs
     ) -> None:
         super(RestrictedKeyDict, self).__init__()
         self.validation_fn = validation_fn
@@ -462,13 +360,11 @@ class RestrictedKeyDict(dict):
     def __setitem__(self, key: Union[symbol, str], value: Any) -> None:
         """Checks if the key is a :class:`symbol` type before setting the value"""
         try:
-            return super(RestrictedKeyDict, self).__setitem__(
-                self.validation_fn(key, self.raise_on_error), value
-            )
+            return super(RestrictedKeyDict, self).__setitem__(self.validation_fn(key, self.raise_on_error), value)
         except TypeError:
             pass
         # __setitem__() must raise a KeyError, not TypeError
-        raise KeyError("invalid non-symbol key: %s: %s" % (type(key), key))
+        raise KeyError('invalid non-symbol key: %s: %s' % (type(key), key))
 
     def update(self, e: Optional[Any] = None, **kwargs) -> None:
         """
@@ -481,7 +377,7 @@ class RestrictedKeyDict(dict):
                     self.__setitem__(k, e[k])
             except TypeError:
                 self.__setitem__(k[0], k[1])  # use tuple consumed from from zip
-                for k, v in e:
+                for (k, v) in e:
                     self.__setitem__(k, v)
         for k in kwargs:
             self.__setitem__(k, kwargs[k])
@@ -522,16 +418,12 @@ class PropertyDict(RestrictedKeyDict):
     :param kwargs: Keyword args for initializing a ``dict`` of the form key1=val1, key2=val2, ...
     """
 
-    def __init__(
-        self, e: Optional[Any] = None, raise_on_error: bool = True, **kwargs
-    ) -> None:
-        super(PropertyDict, self).__init__(
-            _check_is_symbol, e, raise_on_error, **kwargs
-        )
+    def __init__(self, e: Optional[Any] = None, raise_on_error: bool = True, **kwargs) -> None:
+        super(PropertyDict, self).__init__(_check_is_symbol, e, raise_on_error, **kwargs)
 
     def __repr__(self):
-        """Representation of PropertyDict"""
-        return "PropertyDict(%s)" % super(PropertyDict, self).__repr__()
+        """ Representation of PropertyDict """
+        return 'PropertyDict(%s)' % super(PropertyDict, self).__repr__()
 
 
 class AnnotationDict(RestrictedKeyDict):
@@ -570,18 +462,16 @@ class AnnotationDict(RestrictedKeyDict):
     """
 
     def __init__(
-        self,
-        e: Optional[Union[Dict, List, Tuple, Iterable]] = None,
-        raise_on_error: bool = True,
-        **kwargs
+            self,
+            e: Optional[Union[Dict, List, Tuple, Iterable]] = None,
+            raise_on_error: bool = True,
+            **kwargs
     ) -> None:
-        super(AnnotationDict, self).__init__(
-            _check_is_symbol_or_ulong, e, raise_on_error, **kwargs
-        )
+        super(AnnotationDict, self).__init__(_check_is_symbol_or_ulong, e, raise_on_error, **kwargs)
 
     def __repr__(self):
-        """Representation of AnnotationDict"""
-        return "AnnotationDict(%s)" % super(AnnotationDict, self).__repr__()
+        """ Representation of AnnotationDict """
+        return 'AnnotationDict(%s)' % super(AnnotationDict, self).__repr__()
 
 
 class SymbolList(list):
@@ -614,7 +504,9 @@ class SymbolList(list):
     """
 
     def __init__(
-        self, t: Optional[List[Any]] = None, raise_on_error: bool = True
+            self,
+            t: Optional[List[Any]] = None,
+            raise_on_error: bool = True
     ) -> None:
         super(SymbolList, self).__init__()
         self.raise_on_error = raise_on_error
@@ -624,54 +516,47 @@ class SymbolList(list):
             self.extend(t)
 
     def _check_list(self, t: Iterable[Any]) -> List[Any]:
-        """Check all items in list are :class:`symbol`s (or are converted to symbols)."""
-        item = []
+        """ Check all items in list are :class:`symbol`s (or are converted to symbols). """
+        l = []
         if t:
             for v in t:
-                item.append(_check_is_symbol(v, self.raise_on_error))
-        return item
+                l.append(_check_is_symbol(v, self.raise_on_error))
+        return l
 
     def to_array(self):
         return Array(UNDESCRIBED, PN_SYMBOL, *self)
 
     def append(self, v: str) -> None:
-        """Add a single value v to the end of the list"""
+        """ Add a single value v to the end of the list """
         return super(SymbolList, self).append(_check_is_symbol(v, self.raise_on_error))
 
     def extend(self, t: Iterable[str]) -> None:
-        """Add all elements of an iterable t to the end of the list"""
+        """ Add all elements of an iterable t to the end of the list """
         return super(SymbolList, self).extend(self._check_list(t))
 
     def insert(self, i: int, v: str) -> None:
-        """Insert a value v at index i"""
-        return super(SymbolList, self).insert(
-            i, _check_is_symbol(v, self.raise_on_error)
-        )
+        """ Insert a value v at index i """
+        return super(SymbolList, self).insert(i, _check_is_symbol(v, self.raise_on_error))
 
-    def __add__(self, t: Iterable[Any]) -> "SymbolList":
-        """Handles list1 + list2"""
-        return SymbolList(
-            super(SymbolList, self).__add__(self._check_list(t)),
-            raise_on_error=self.raise_on_error,
-        )
+    def __add__(self, t: Iterable[Any]) -> 'SymbolList':
+        """ Handles list1 + list2 """
+        return SymbolList(super(SymbolList, self).__add__(self._check_list(t)), raise_on_error=self.raise_on_error)
 
     def __iadd__(self, t):
-        """Handles list1 += list2"""
+        """ Handles list1 += list2 """
         return super(SymbolList, self).__iadd__(self._check_list(t))
 
     def __eq__(self, other):
-        """Handles list1 == list2"""
+        """ Handles list1 == list2 """
         return super().__eq__(SymbolList(other, raise_on_error=False))
 
     def __setitem__(self, i: int, t: Any) -> None:
-        """Handles list[i] = v"""
-        return super(SymbolList, self).__setitem__(
-            i, _check_is_symbol(t, self.raise_on_error)
-        )
+        """ Handles list[i] = v """
+        return super(SymbolList, self).__setitem__(i, _check_is_symbol(t, self.raise_on_error))
 
     def __repr__(self) -> str:
-        """Representation of SymbolList"""
-        return "SymbolList(%s)" % super(SymbolList, self).__repr__()
+        """ Representation of SymbolList """
+        return 'SymbolList(%s)' % super(SymbolList, self).__repr__()
 
 
 class Data:
@@ -777,7 +662,7 @@ class Data:
         DESCRIBED: "described",
         ARRAY: "array",
         LIST: "list",
-        MAP: "map",
+        MAP: "map"
     }
     """
     A map which uses the enumerated type as a key to get a text name for the type.
@@ -891,7 +776,7 @@ class Data:
         pn_data_narrow(self._data)
 
     def widen(self) -> None:
-        """Reverse the effect of :meth:`narrow`."""
+        """ Reverse the effect of :meth:`narrow`. """
         pn_data_widen(self._data)
 
     def type(self) -> Optional[int]:
@@ -1119,15 +1004,15 @@ class Data:
         """
         self._check(pn_data_put_ulong(self._data, ul))
 
-    def put_long(self, i64: Union[long, int]) -> None:
+    def put_long(self, l: Union[long, int]) -> None:
         """
         Puts a signed long value.
 
-        :param i64: an integral value in the range :math:`-(2^{63})` to :math:`2^{63} - 1` inclusive.
+        :param l: an integral value in the range :math:`-(2^{63})` to :math:`2^{63} - 1` inclusive.
         :raise: * ``AssertionError`` if parameter is out of the range :math:`-(2^{63})` to :math:`2^{63} - 1` inclusive.
                 * :exc:`DataException` if there is a Proton error.
         """
-        self._check(pn_data_put_long(self._data, i64))
+        self._check(pn_data_put_long(self._data, l))
 
     def put_timestamp(self, t: Union[timestamp, int]) -> None:
         """
@@ -1489,7 +1374,7 @@ class Data:
         """
         return symbol(pn_data_get_symbol(self._data))
 
-    def copy(self, src: "Data") -> None:
+    def copy(self, src: 'Data') -> None:
         """
         Copy the contents of another pn_data_t object. Any values in the
         data object will be lost.
@@ -1706,7 +1591,7 @@ class Data:
         AnnotationDict: put_dict,
         PropertyDict: put_dict,
         SymbolList: put_sequence,
-        memoryview: put_binary,
+        memoryview: put_binary
     }
     get_mappings = {
         NULL: lambda s: None,
@@ -1733,7 +1618,7 @@ class Data:
         DESCRIBED: get_py_described,
         ARRAY: get_py_array,
         LIST: get_sequence,
-        MAP: get_dict,
+        MAP: get_dict
     }
 
     def put_object(self, obj: Any) -> None:

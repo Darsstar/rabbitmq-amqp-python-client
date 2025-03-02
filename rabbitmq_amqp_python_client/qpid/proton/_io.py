@@ -18,10 +18,11 @@
 #
 
 import errno
-import select
 import socket
+import select
 import time
-from typing import TYPE_CHECKING, List, Tuple
+
+from typing import TYPE_CHECKING, Tuple, List
 
 if TYPE_CHECKING:
     from proton._selectable import Selectable
@@ -30,6 +31,7 @@ PN_INVALID_SOCKET = -1
 
 
 class IO(object):
+
     @staticmethod
     def _setupsocket(s: socket.socket) -> None:
         s.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, True)
@@ -75,13 +77,14 @@ class IO(object):
         return
 
     class Selector(object):
+
         def __init__(self) -> None:
             self._selectables = set()
             self._reading = set()
             self._writing = set()
             self._deadline = None
 
-        def add(self, selectable: "Selectable") -> None:
+        def add(self, selectable: 'Selectable') -> None:
             self._selectables.add(selectable)
             if selectable.reading:
                 self._reading.add(selectable)
@@ -93,7 +96,7 @@ class IO(object):
                 else:
                     self._deadline = min(selectable.deadline, self._deadline)
 
-        def remove(self, selectable: "Selectable") -> None:
+        def remove(self, selectable: 'Selectable') -> None:
             self._selectables.discard(selectable)
             self._reading.discard(selectable)
             self._writing.discard(selectable)
@@ -111,7 +114,7 @@ class IO(object):
                     else:
                         self._deadline = min(sel.deadline, self._deadline)
 
-        def update(self, selectable: "Selectable") -> None:
+        def update(self, selectable: 'Selectable') -> None:
             self._reading.discard(selectable)
             self._writing.discard(selectable)
             if selectable.reading:
@@ -121,6 +124,7 @@ class IO(object):
             self.update_deadline()
 
         def select(self, timeout: float) -> Tuple[List, List, List]:
+
             def select_inner(timeout):
                 # This inner select adds the writing fds to the exception fd set
                 # because Windows returns connected fds in the exception set not the

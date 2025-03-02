@@ -18,68 +18,24 @@
 #
 
 import threading
-from typing import TYPE_CHECKING, Any, Optional, Union
 
-from cproton import (
-    PN_CONNECTION_BOUND,
-    PN_CONNECTION_FINAL,
-    PN_CONNECTION_INIT,
-    PN_CONNECTION_LOCAL_CLOSE,
-    PN_CONNECTION_LOCAL_OPEN,
-    PN_CONNECTION_REMOTE_CLOSE,
-    PN_CONNECTION_REMOTE_OPEN,
-    PN_CONNECTION_UNBOUND,
-    PN_DELIVERY,
-    PN_LINK_FINAL,
-    PN_LINK_FLOW,
-    PN_LINK_INIT,
-    PN_LINK_LOCAL_CLOSE,
-    PN_LINK_LOCAL_DETACH,
-    PN_LINK_LOCAL_OPEN,
-    PN_LINK_REMOTE_CLOSE,
-    PN_LINK_REMOTE_DETACH,
-    PN_LINK_REMOTE_OPEN,
-    PN_SESSION_FINAL,
-    PN_SESSION_INIT,
-    PN_SESSION_LOCAL_CLOSE,
-    PN_SESSION_LOCAL_OPEN,
-    PN_SESSION_REMOTE_CLOSE,
-    PN_SESSION_REMOTE_OPEN,
-    PN_TIMER_TASK,
-    PN_TRANSPORT,
-    PN_TRANSPORT_CLOSED,
-    PN_TRANSPORT_ERROR,
-    PN_TRANSPORT_HEAD_CLOSED,
-    PN_TRANSPORT_TAIL_CLOSED,
-    isnull,
-    pn_cast_pn_connection,
-    pn_cast_pn_delivery,
-    pn_cast_pn_link,
-    pn_cast_pn_session,
-    pn_cast_pn_transport,
-    pn_collector,
-    pn_collector_free,
-    pn_collector_more,
-    pn_collector_peek,
-    pn_collector_pop,
-    pn_collector_put_pyref,
-    pn_collector_release,
-    pn_event_class_name,
-    pn_event_connection,
-    pn_event_context,
-    pn_event_delivery,
-    pn_event_link,
-    pn_event_session,
-    pn_event_transport,
-    pn_event_type,
-    pn_event_type_name,
-    void2py,
-)
+from cproton import PN_CONNECTION_BOUND, PN_CONNECTION_FINAL, PN_CONNECTION_INIT, PN_CONNECTION_LOCAL_CLOSE, \
+    PN_CONNECTION_LOCAL_OPEN, PN_CONNECTION_REMOTE_CLOSE, PN_CONNECTION_REMOTE_OPEN, PN_CONNECTION_UNBOUND, PN_DELIVERY, \
+    PN_LINK_FINAL, PN_LINK_FLOW, PN_LINK_INIT, PN_LINK_LOCAL_CLOSE, PN_LINK_LOCAL_DETACH, PN_LINK_LOCAL_OPEN, \
+    PN_LINK_REMOTE_CLOSE, PN_LINK_REMOTE_DETACH, PN_LINK_REMOTE_OPEN, PN_SESSION_FINAL, PN_SESSION_INIT, \
+    PN_SESSION_LOCAL_CLOSE, PN_SESSION_LOCAL_OPEN, PN_SESSION_REMOTE_CLOSE, PN_SESSION_REMOTE_OPEN, PN_TIMER_TASK, \
+    PN_TRANSPORT, PN_TRANSPORT_CLOSED, PN_TRANSPORT_ERROR, PN_TRANSPORT_HEAD_CLOSED, PN_TRANSPORT_TAIL_CLOSED, \
+    pn_cast_pn_connection, pn_cast_pn_delivery, pn_cast_pn_link, pn_cast_pn_session, pn_cast_pn_transport, \
+    pn_collector, pn_collector_free, pn_collector_more, pn_collector_peek, pn_collector_pop, \
+    pn_collector_put_pyref, pn_collector_release, pn_event_connection, pn_event_context, pn_event_delivery, pn_event_link, \
+    pn_event_session, pn_event_transport, pn_event_type, pn_event_class_name, pn_event_type_name, \
+    isnull, void2py
 
 from ._delivery import Delivery
 from ._endpoints import Connection, Link, Session
 from ._handler import Handler
 from ._transport import Transport
+from typing import Any, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ._endpoints import Receiver, Sender
@@ -87,19 +43,21 @@ if TYPE_CHECKING:
 
 
 class Collector:
+
     def __init__(self) -> None:
         self._impl = pn_collector()
 
-    def put(self, obj: Any, etype: "EventType") -> None:
+    def put(self, obj: Any, etype: 'EventType') -> None:
         pn_collector_put_pyref(self._impl, obj, etype)
 
-    def peek(self) -> Optional["Event"]:
+    def peek(self) -> Optional['Event']:
         return Event.wrap(pn_collector_peek(self._impl))
 
     def more(self) -> bool:
         return pn_collector_more(self._impl)
 
     def pop(self) -> None:
+        # ev = self.peek() # why is this necessary here?
         pn_collector_pop(self._impl)
 
     def release(self) -> None:
@@ -111,7 +69,6 @@ class Collector:
 
 
 if "TypeExtender" not in globals():
-
     class TypeExtender:
         def __init__(self, number: int) -> None:
             self.number = number
@@ -132,17 +89,11 @@ class EventType(object):
     treated as an *extended* event, and is assigned an
     internal event number starting at 10000.
     """
-
     _lock = threading.Lock()
     _extended = TypeExtender(10000)
     TYPES = {}
 
-    def __init__(
-        self,
-        name: Optional[str] = None,
-        number: Optional[int] = None,
-        method: Optional[str] = None,
-    ) -> None:
+    def __init__(self, name: Optional[str] = None, number: Optional[int] = None, method: Optional[str] = None) -> None:
         if name is None and number is None:
             raise TypeError("extended events require a name")
         try:
@@ -180,6 +131,7 @@ def _dispatch(handler: Any, method: str, *args) -> None:
 
 
 class EventBase(object):
+
     def __init__(self, type: EventType) -> None:
         self._type = type
 
@@ -226,7 +178,7 @@ wrappers = {
     "pn_session": lambda x: Session.wrap(pn_cast_pn_session(x)),
     "pn_link": lambda x: Link.wrap(pn_cast_pn_link(x)),
     "pn_delivery": lambda x: Delivery.wrap(pn_cast_pn_delivery(x)),
-    "pn_transport": lambda x: Transport.wrap(pn_cast_pn_transport(x)),
+    "pn_transport": lambda x: Transport.wrap(pn_cast_pn_transport(x))
 }
 
 
@@ -234,7 +186,6 @@ class Event(EventBase):
     """
     Notification of a state change in the protocol engine.
     """
-
     TIMER_TASK = _core(PN_TIMER_TASK, "on_timer_task")
     """A timer event has occurred."""
 
@@ -263,25 +214,19 @@ class Event(EventBase):
     type point to the relevant connection.
     """
 
-    CONNECTION_LOCAL_CLOSE = _core(
-        PN_CONNECTION_LOCAL_CLOSE, "on_connection_local_close"
-    )
+    CONNECTION_LOCAL_CLOSE = _core(PN_CONNECTION_LOCAL_CLOSE, "on_connection_local_close")
     """
     The local connection endpoint has been closed. Events of this
     type point to the relevant connection.
     """
 
-    CONNECTION_REMOTE_OPEN = _core(
-        PN_CONNECTION_REMOTE_OPEN, "on_connection_remote_open"
-    )
+    CONNECTION_REMOTE_OPEN = _core(PN_CONNECTION_REMOTE_OPEN, "on_connection_remote_open")
     """
     The remote endpoint has opened the connection. Events of this
     type point to the relevant connection.
     """
 
-    CONNECTION_REMOTE_CLOSE = _core(
-        PN_CONNECTION_REMOTE_CLOSE, "on_connection_remote_close"
-    )
+    CONNECTION_REMOTE_CLOSE = _core(PN_CONNECTION_REMOTE_CLOSE, "on_connection_remote_close")
     """
     The remote endpoint has closed the connection. Events of this
     type point to the relevant connection.
@@ -513,9 +458,7 @@ class Event(EventBase):
         return self._clsname
 
     @property
-    def context(
-        self,
-    ) -> Union[Optional[Any], Connection, Session, Link, Delivery, Transport]:
+    def context(self) -> Union[Optional[Any], Connection, Session, Link, Delivery, Transport]:
         """
         The context object associated with the event.
 
@@ -541,9 +484,9 @@ class Event(EventBase):
 
         If none of these has a handler, then ``None`` is returned.
         """
-        link = self.link
-        if link:
-            h = link.handler
+        l = self.link
+        if l:
+            h = l.handler
             if h:
                 return h
         s = self.session
@@ -557,20 +500,20 @@ class Event(EventBase):
             if h:
                 return h
         c = self.context
-        if not c or not hasattr(c, "handler"):
+        if not c or not hasattr(c, 'handler'):
             return None
         h = c.handler
         return h
 
     @property
-    def reactor(self) -> "Container":
+    def reactor(self) -> 'Container':
         """
         **Deprecated** - The :class:`reactor.Container` (was reactor) associated with the event.
         """
         return self.container
 
     @property
-    def container(self) -> "Container":
+    def container(self) -> 'Container':
         """
         The :class:`reactor.Container` associated with the event.
         """
@@ -583,9 +526,7 @@ class Event(EventBase):
         """
         c = self.context
         # Direct type or subclass of type
-        if type(c).__name__.lower() == name or name in [
-            x.__name__.lower() for x in type(c).__bases__
-        ]:
+        if type(c).__name__.lower() == name or name in [x.__name__.lower() for x in type(c).__bases__]:
             return c
 
         # If the attached object is the wrong type then see if *it* has a property of that name
@@ -616,7 +557,7 @@ class Event(EventBase):
         return self._session
 
     @property
-    def link(self) -> Optional[Union["Receiver", "Sender"]]:
+    def link(self) -> Optional[Union['Receiver', 'Sender']]:
         """
         The link associated with the event, or ``None`` if none
         is associated with it.
@@ -624,29 +565,29 @@ class Event(EventBase):
         return self._link
 
     @property
-    def sender(self) -> Optional["Sender"]:
+    def sender(self) -> Optional['Sender']:
         """
         The sender link associated with the event, or ``None`` if
         none is associated with it. This is essentially an alias for
         ``link`` property, that does an additional check on the type of the
         link.
         """
-        link = self.link
-        if link and link.is_sender:
-            return link
+        l = self.link
+        if l and l.is_sender:
+            return l
         else:
             return None
 
     @property
-    def receiver(self) -> Optional["Receiver"]:
+    def receiver(self) -> Optional['Receiver']:
         """
         The receiver link associated with the event, or ``None`` if
         none is associated with it. This is essentially an alias for
         ``link`` property, that does an additional check on the type of the link.
         """
-        link = self.link
-        if link and link.is_receiver:
-            return link
+        l = self.link
+        if l and l.is_receiver:
+            return l
         else:
             return None
 

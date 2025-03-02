@@ -19,19 +19,14 @@
 
 from typing import Any, Callable, Optional
 
-from cproton import (
-    addressof,
-    pn_decref,
-    pn_incref,
-    pn_record_def_py,
-    pn_record_get_py,
-    pn_record_set_py,
-)
+from cproton import addressof, pn_incref, pn_decref, \
+    pn_record_get_py, pn_record_def_py, pn_record_set_py
 
 from ._exceptions import ProtonException
 
 
 class EmptyAttrs:
+
     def __contains__(self, name):
         return False
 
@@ -46,25 +41,25 @@ EMPTY_ATTRS = EmptyAttrs()
 
 
 class Wrapper(object):
-    """Wrapper for python objects that need to be stored in event contexts and be retrieved again from them
-    Quick note on how this works:
-    The actual *python* object has only 3 attributes which redirect into the wrapped C objects:
-    _impl   The wrapped C object itself
-    _attrs  This is a special pn_record_t holding a PYCTX which is a python dict
-            every attribute in the python object is actually looked up here
+    """ Wrapper for python objects that need to be stored in event contexts and be retrieved again from them
+        Quick note on how this works:
+        The actual *python* object has only 3 attributes which redirect into the wrapped C objects:
+        _impl   The wrapped C object itself
+        _attrs  This is a special pn_record_t holding a PYCTX which is a python dict
+                every attribute in the python object is actually looked up here
 
-    Because the objects actual attributes are stored away they must be initialised *after* the wrapping
-    is set up. This is the purpose of the _init method in the wrapped  object. Wrapper.__init__ will call
-    eht subclass _init to initialise attributes. So they *must not* be initialised in the subclass __init__
-    before calling the superclass (Wrapper) __init__ or they will not be accessible from the wrapper at all.
+        Because the objects actual attributes are stored away they must be initialised *after* the wrapping
+        is set up. This is the purpose of the _init method in the wrapped  object. Wrapper.__init__ will call
+        eht subclass _init to initialise attributes. So they *must not* be initialised in the subclass __init__
+        before calling the superclass (Wrapper) __init__ or they will not be accessible from the wrapper at all.
 
     """
 
     def __init__(
-        self,
-        impl: Any = None,
-        get_context: Optional[Callable[[Any], Any]] = None,
-        constructor: Optional[Callable[[], Any]] = None,
+            self,
+            impl: Any = None,
+            get_context: Optional[Callable[[Any], Any]] = None,
+            constructor: Optional[Callable[[], Any]] = None
     ) -> None:
         init = False
         if impl is None and constructor is not None:
@@ -74,8 +69,7 @@ class Wrapper(object):
                 self.__dict__["_impl"] = impl
                 self.__dict__["_attrs"] = EMPTY_ATTRS
                 raise ProtonException(
-                    "Wrapper failed to create wrapped object. Check for file descriptor or memory exhaustion."
-                )
+                    "Wrapper failed to create wrapped object. Check for file descriptor or memory exhaustion.")
             init = True
         else:
             # we are wrapping an existing object
@@ -133,9 +127,6 @@ class Wrapper(object):
         pn_decref(self._impl)
 
     def __repr__(self) -> str:
-        return "<%s.%s 0x%x ~ 0x%x>" % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            id(self),
-            addressof(self._impl),
-        )
+        return '<%s.%s 0x%x ~ 0x%x>' % (self.__class__.__module__,
+                                        self.__class__.__name__,
+                                        id(self), addressof(self._impl))

@@ -17,124 +17,35 @@
 # under the License.
 #
 
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    List,
-    Optional,
-    Type,
-    Union,
-)
+from typing import Callable, Optional, Type, Union, TYPE_CHECKING, List
 
-from cproton import (
-    PN_EOS,
-    PN_SASL_AUTH,
-    PN_SASL_NONE,
-    PN_SASL_OK,
-    PN_SASL_PERM,
-    PN_SASL_SYS,
-    PN_SASL_TEMP,
-    PN_SSL_ANONYMOUS_PEER,
-    PN_SSL_CERT_SUBJECT_CITY_OR_LOCALITY,
-    PN_SSL_CERT_SUBJECT_COMMON_NAME,
-    PN_SSL_CERT_SUBJECT_COUNTRY_NAME,
-    PN_SSL_CERT_SUBJECT_ORGANIZATION_NAME,
-    PN_SSL_CERT_SUBJECT_ORGANIZATION_UNIT,
-    PN_SSL_CERT_SUBJECT_STATE_OR_PROVINCE,
-    PN_SSL_MD5,
-    PN_SSL_MODE_CLIENT,
-    PN_SSL_MODE_SERVER,
-    PN_SSL_RESUME_NEW,
-    PN_SSL_RESUME_REUSED,
-    PN_SSL_RESUME_UNKNOWN,
-    PN_SSL_SHA1,
-    PN_SSL_SHA256,
-    PN_SSL_SHA512,
-    PN_SSL_VERIFY_PEER,
-    PN_SSL_VERIFY_PEER_NAME,
-    PN_TRACE_DRV,
-    PN_TRACE_FRM,
-    PN_TRACE_OFF,
-    PN_TRACE_RAW,
-    isnull,
-    pn_error_text,
-    pn_sasl,
-    pn_sasl_allowed_mechs,
-    pn_sasl_config_name,
-    pn_sasl_config_path,
-    pn_sasl_done,
-    pn_sasl_extended,
-    pn_sasl_get_allow_insecure_mechs,
-    pn_sasl_get_authorization,
-    pn_sasl_get_mech,
-    pn_sasl_get_user,
-    pn_sasl_outcome,
-    pn_sasl_set_allow_insecure_mechs,
-    pn_ssl,
-    pn_ssl_domain,
-    pn_ssl_domain_allow_unsecured_client,
-    pn_ssl_domain_free,
-    pn_ssl_domain_set_credentials,
-    pn_ssl_domain_set_peer_authentication,
-    pn_ssl_domain_set_trusted_ca_db,
-    pn_ssl_get_cert_fingerprint,
-    pn_ssl_get_cipher_name,
-    pn_ssl_get_peer_hostname,
-    pn_ssl_get_protocol_name,
-    pn_ssl_get_remote_subject,
-    pn_ssl_get_remote_subject_subfield,
-    pn_ssl_init,
-    pn_ssl_present,
-    pn_ssl_resume_status,
-    pn_ssl_set_peer_hostname,
-    pn_transport,
-    pn_transport_attachments,
-    pn_transport_bind,
-    pn_transport_capacity,
-    pn_transport_close_head,
-    pn_transport_close_tail,
-    pn_transport_closed,
-    pn_transport_condition,
-    pn_transport_connection,
-    pn_transport_error,
-    pn_transport_get_channel_max,
-    pn_transport_get_frames_input,
-    pn_transport_get_frames_output,
-    pn_transport_get_idle_timeout,
-    pn_transport_get_max_frame,
-    pn_transport_get_pytracer,
-    pn_transport_get_remote_idle_timeout,
-    pn_transport_get_remote_max_frame,
-    pn_transport_get_user,
-    pn_transport_is_authenticated,
-    pn_transport_is_encrypted,
-    pn_transport_log,
-    pn_transport_peek,
-    pn_transport_pending,
-    pn_transport_pop,
-    pn_transport_push,
-    pn_transport_remote_channel_max,
-    pn_transport_require_auth,
-    pn_transport_require_encryption,
-    pn_transport_set_channel_max,
-    pn_transport_set_idle_timeout,
-    pn_transport_set_max_frame,
-    pn_transport_set_pytracer,
-    pn_transport_set_server,
-    pn_transport_tick,
-    pn_transport_trace,
-    pn_transport_unbind,
-)
+from cproton import PN_EOS, PN_OK, PN_SASL_AUTH, PN_SASL_NONE, PN_SASL_OK, PN_SASL_PERM, PN_SASL_SYS, PN_SASL_TEMP, \
+    PN_SSL_ANONYMOUS_PEER, PN_SSL_CERT_SUBJECT_CITY_OR_LOCALITY, PN_SSL_CERT_SUBJECT_COMMON_NAME, \
+    PN_SSL_CERT_SUBJECT_COUNTRY_NAME, PN_SSL_CERT_SUBJECT_ORGANIZATION_NAME, PN_SSL_CERT_SUBJECT_ORGANIZATION_UNIT, \
+    PN_SSL_CERT_SUBJECT_STATE_OR_PROVINCE, PN_SSL_MD5, PN_SSL_MODE_CLIENT, PN_SSL_MODE_SERVER, PN_SSL_RESUME_NEW, \
+    PN_SSL_RESUME_REUSED, PN_SSL_RESUME_UNKNOWN, PN_SSL_SHA1, PN_SSL_SHA256, PN_SSL_SHA512, PN_SSL_VERIFY_PEER, \
+    PN_SSL_VERIFY_PEER_NAME, PN_TRACE_DRV, PN_TRACE_FRM, PN_TRACE_OFF, PN_TRACE_RAW, pn_error_text, pn_sasl, \
+    pn_sasl_allowed_mechs, pn_sasl_config_name, pn_sasl_config_path, pn_sasl_done, pn_sasl_extended, \
+    pn_sasl_get_allow_insecure_mechs, pn_sasl_get_mech, pn_sasl_get_user, pn_sasl_get_authorization, pn_sasl_outcome, \
+    pn_sasl_set_allow_insecure_mechs, pn_ssl, pn_ssl_domain, pn_ssl_domain_allow_unsecured_client, pn_ssl_domain_free, \
+    pn_ssl_domain_set_credentials, pn_ssl_domain_set_peer_authentication, pn_ssl_domain_set_trusted_ca_db, \
+    pn_ssl_get_cert_fingerprint, pn_ssl_get_cipher_name, pn_ssl_get_peer_hostname, pn_ssl_get_protocol_name, \
+    pn_ssl_get_remote_subject, pn_ssl_get_remote_subject_subfield, pn_ssl_init, pn_ssl_present, pn_ssl_resume_status, \
+    pn_ssl_set_peer_hostname, pn_transport, pn_transport_attachments, pn_transport_bind, pn_transport_capacity, \
+    pn_transport_close_head, pn_transport_close_tail, pn_transport_closed, pn_transport_condition, \
+    pn_transport_connection, pn_transport_error, pn_transport_get_channel_max, pn_transport_get_frames_input, \
+    pn_transport_get_frames_output, pn_transport_get_idle_timeout, pn_transport_get_max_frame, \
+    pn_transport_get_pytracer, pn_transport_get_remote_idle_timeout, pn_transport_get_remote_max_frame, \
+    pn_transport_get_user, pn_transport_is_authenticated, pn_transport_is_encrypted, pn_transport_log, \
+    pn_transport_peek, pn_transport_pending, pn_transport_pop, pn_transport_push, pn_transport_remote_channel_max, \
+    pn_transport_require_auth, pn_transport_require_encryption, pn_transport_set_channel_max, \
+    pn_transport_set_idle_timeout, pn_transport_set_max_frame, pn_transport_set_pytracer, pn_transport_set_server, \
+    pn_transport_tick, pn_transport_trace, pn_transport_unbind, \
+    isnull
 
 from ._common import millis2secs, secs2millis
 from ._condition import cond2obj, obj2cond
-from ._exceptions import (
-    EXCEPTIONS,
-    SessionException,
-    SSLException,
-    SSLUnavailable,
-    TransportException,
-)
+from ._exceptions import EXCEPTIONS, SSLException, SSLUnavailable, SessionException, TransportException
 from ._wrapper import Wrapper
 
 if TYPE_CHECKING:
@@ -143,7 +54,8 @@ if TYPE_CHECKING:
 
 
 class TraceAdapter:
-    def __init__(self, tracer: Callable[["Transport", str], None]) -> None:
+
+    def __init__(self, tracer: Callable[['Transport', str], None]) -> None:
         self.tracer = tracer
 
     def __call__(self, trans_impl, message):
@@ -174,21 +86,19 @@ class Transport(Wrapper):
     """ Transport mode is as a server. """
 
     @staticmethod
-    def wrap(impl: Optional[Callable]) -> Optional["Transport"]:
+    def wrap(impl: Optional[Callable]) -> Optional['Transport']:
         if isnull(impl):
             return None
         else:
             return Transport(impl=impl)
 
     def __init__(
-        self,
-        mode: "Optional[int]" = None,
-        impl: "Callable" = None,
+            self,
+            mode: 'Optional[int]' = None,
+            impl: 'Callable' = None,
     ) -> None:
         if impl is None:
-            Wrapper.__init__(
-                self, constructor=pn_transport, get_context=pn_transport_attachments
-            )
+            Wrapper.__init__(self, constructor=pn_transport, get_context=pn_transport_attachments)
         else:
             Wrapper.__init__(self, impl, pn_transport_attachments)
         if mode == Transport.SERVER:
@@ -196,9 +106,7 @@ class Transport(Wrapper):
         elif mode is None or mode == Transport.CLIENT:
             pass
         else:
-            raise TransportException(
-                "Cannot initialise Transport from mode: %s" % str(mode)
-            )
+            raise TransportException("Cannot initialise Transport from mode: %s" % str(mode))
 
     def _init(self) -> None:
         self._sasl = None
@@ -214,7 +122,7 @@ class Transport(Wrapper):
             return err
 
     @property
-    def tracer(self) -> Optional[Callable[["Transport", str], None]]:
+    def tracer(self) -> Optional[Callable[['Transport', str], None]]:
         """A callback for trace logging. The callback is passed the transport
         and log message. For no tracer callback, value is ``None``.
         """
@@ -225,7 +133,7 @@ class Transport(Wrapper):
             return None
 
     @tracer.setter
-    def tracer(self, tracer: Callable[["Transport", str], None]) -> None:
+    def tracer(self, tracer: Callable[['Transport', str], None]) -> None:
         pn_transport_set_pytracer(self._impl, TraceAdapter(tracer))
 
     def log(self, message: str) -> None:
@@ -307,7 +215,7 @@ class Transport(Wrapper):
         """
         return pn_transport_get_user(self._impl)
 
-    def bind(self, connection: "Connection") -> None:
+    def bind(self, connection: 'Connection') -> None:
         """
         Assign a connection to the transport.
 
@@ -316,7 +224,7 @@ class Transport(Wrapper):
         """
         self._check(pn_transport_bind(self._impl, connection._impl))
 
-    def bind_nothrow(self, connection: "Connection") -> None:
+    def bind_nothrow(self, connection: 'Connection') -> None:
         """
         Assign a connection to the transport. Any failure is
         ignored rather than thrown.
@@ -393,9 +301,7 @@ class Transport(Wrapper):
         """
         n = self._check(pn_transport_push(self._impl, binary))
         if n != len(binary):
-            raise OverflowError(
-                "unable to process all bytes: %s, %s" % (n, len(binary))
-            )
+            raise OverflowError("unable to process all bytes: %s, %s" % (n, len(binary)))
 
     def close_tail(self) -> None:
         """
@@ -556,7 +462,7 @@ class Transport(Wrapper):
         """
         return pn_transport_get_frames_input(self._impl)
 
-    def sasl(self) -> "SASL":
+    def sasl(self) -> 'SASL':
         """
         Get the :class:`SASL` object associated with this transport.
 
@@ -564,11 +470,7 @@ class Transport(Wrapper):
         """
         return SASL(self)
 
-    def ssl(
-        self,
-        domain: Optional["SSLDomain"] = None,
-        session_details: Optional["SSLSessionDetails"] = None,
-    ) -> "SSL":
+    def ssl(self, domain: Optional['SSLDomain'] = None, session_details: Optional['SSLSessionDetails'] = None) -> 'SSL':
         """
         Get the :class:`SSL` session associated with this transport. If
         not set, then a new session will be created using ``domain`` and
@@ -584,7 +486,7 @@ class Transport(Wrapper):
         return self._ssl
 
     @property
-    def condition(self) -> Optional["Condition"]:
+    def condition(self) -> Optional['Condition']:
         """Get additional information about the condition of the transport.
 
         When a :const:`Event.TRANSPORT_ERROR` event occurs, this operation
@@ -595,15 +497,14 @@ class Transport(Wrapper):
         return cond2obj(pn_transport_condition(self._impl))
 
     @condition.setter
-    def condition(self, cond: "Condition") -> None:
+    def condition(self, cond: 'Condition') -> None:
         pn_cond = pn_transport_condition(self._impl)
         obj2cond(cond, pn_cond)
 
     @property
-    def connection(self) -> "Connection":
+    def connection(self) -> 'Connection':
         """The connection bound to this transport."""
         from . import _endpoints
-
         return _endpoints.Connection.wrap(pn_transport_connection(self._impl))
 
 
@@ -619,7 +520,6 @@ class SASL(Wrapper):
     authentication credentials. The peer acting as the SASL Server must
     provide authentication against the received credentials.
     """
-
     OK = PN_SASL_OK
     AUTH = PN_SASL_AUTH
     SYS = PN_SASL_SYS
@@ -830,9 +730,7 @@ class SSLDomain(object):
         else:
             return err
 
-    def set_credentials(
-        self, cert_file: str, key_file: str, password: Optional[str]
-    ) -> int:
+    def set_credentials(self, cert_file: str, key_file: str, password: Optional[str]) -> int:
         """
         Set the certificate that identifies the local node to the remote.
 
@@ -858,9 +756,9 @@ class SSLDomain(object):
         :return: 0 on success
         :raise: :exc:`SSLException` if there is any Proton error
         """
-        return self._check(
-            pn_ssl_domain_set_credentials(self._domain, cert_file, key_file, password)
-        )
+        return self._check(pn_ssl_domain_set_credentials(self._domain,
+                                                         cert_file, key_file,
+                                                         password))
 
     def set_trusted_ca_db(self, certificate_db: str) -> int:
         """
@@ -883,13 +781,10 @@ class SSLDomain(object):
         :return: 0 on success
         :raise: :exc:`SSLException` if there is any Proton error
         """
-        return self._check(
-            pn_ssl_domain_set_trusted_ca_db(self._domain, certificate_db)
-        )
+        return self._check(pn_ssl_domain_set_trusted_ca_db(self._domain,
+                                                           certificate_db))
 
-    def set_peer_authentication(
-        self, verify_mode: int, trusted_CAs: Optional[str] = None
-    ) -> int:
+    def set_peer_authentication(self, verify_mode: int, trusted_CAs: Optional[str] = None) -> int:
         """
         This method controls how the peer's certificate is validated, if at all.  By default,
         servers do not attempt to verify their peers (PN_SSL_ANONYMOUS_PEER) but
@@ -912,11 +807,9 @@ class SSLDomain(object):
         :return: 0 on success
         :raise: :exc:`SSLException` if there is any Proton error
         """
-        return self._check(
-            pn_ssl_domain_set_peer_authentication(
-                self._domain, verify_mode, trusted_CAs
-            )
-        )
+        return self._check(pn_ssl_domain_set_peer_authentication(self._domain,
+                                                                 verify_mode,
+                                                                 trusted_CAs))
 
     def allow_unsecured_client(self) -> int:
         """
@@ -957,22 +850,19 @@ class SSL(object):
             return err
 
     def __new__(
-        cls: Type["SSL"],
-        transport: Transport,
-        domain: SSLDomain,
-        session_details: Optional["SSLSessionDetails"] = None,
-    ) -> "SSL":
+            cls: Type['SSL'],
+            transport: Transport,
+            domain: SSLDomain,
+            session_details: Optional['SSLSessionDetails'] = None
+    ) -> 'SSL':
         """Enforce a singleton SSL object per Transport"""
         if transport._ssl:
             # unfortunately, we've combined the allocation and the configuration in a
             # single step.  So catch any attempt by the application to provide what
             # may be a different configuration than the original (hack)
             ssl = transport._ssl
-            different_domain = domain and (ssl._domain is not domain)
-            different_session_details = session_details and (
-                ssl._session_details is not session_details
-            )
-            if different_domain or different_session_details:
+            if (domain and (ssl._domain is not domain) or
+                    session_details and (ssl._session_details is not session_details)):
                 raise SSLException("Cannot re-configure existing SSL object!")
         else:
             obj = super(SSL, cls).__new__(cls)
@@ -1136,9 +1026,7 @@ class SSL(object):
         """
         return self.get_cert_subject_subfield(SSL.CERT_STATE_OR_PROVINCE)
 
-    def get_cert_fingerprint(
-        self, fingerprint_length: int, digest_name: int
-    ) -> Optional[str]:
+    def get_cert_fingerprint(self, fingerprint_length: int, digest_name: int) -> Optional[str]:
         """
         Get the fingerprint of the certificate. The certificate fingerprint
         (as displayed in the Fingerprints section when looking at a certificate

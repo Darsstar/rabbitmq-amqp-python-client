@@ -17,6 +17,11 @@
 # under the License.
 #
 
-from ._tracing import get_tracer, init_tracer
+from ._tracing import (
+    get_tracer, init_tracer
+)
 
-__all__ = ["get_tracer", "init_tracer"]
+__all__ = [
+    'get_tracer',
+    'init_tracer'
+]

@@ -22,177 +22,49 @@ The proton.endpoints module
 """
 
 import weakref
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Union,
-)
 
-from cproton import (
-    PN_CONFIGURATION,
-    PN_COORDINATOR,
-    PN_DELIVERIES,
-    PN_DIST_MODE_COPY,
-    PN_DIST_MODE_MOVE,
-    PN_DIST_MODE_UNSPECIFIED,
-    PN_EOS,
-    PN_EXPIRE_NEVER,
-    PN_EXPIRE_WITH_CONNECTION,
-    PN_EXPIRE_WITH_LINK,
-    PN_EXPIRE_WITH_SESSION,
-    PN_LOCAL_ACTIVE,
-    PN_LOCAL_CLOSED,
-    PN_LOCAL_UNINIT,
-    PN_NONDURABLE,
-    PN_RCV_FIRST,
-    PN_RCV_SECOND,
-    PN_REMOTE_ACTIVE,
-    PN_REMOTE_CLOSED,
-    PN_REMOTE_UNINIT,
-    PN_SND_MIXED,
-    PN_SND_SETTLED,
-    PN_SND_UNSETTLED,
-    PN_SOURCE,
-    PN_TARGET,
-    PN_UNSPECIFIED,
-    isnull,
-    pn_connection,
-    pn_connection_attachments,
-    pn_connection_close,
-    pn_connection_collect,
-    pn_connection_condition,
-    pn_connection_desired_capabilities,
-    pn_connection_error,
-    pn_connection_get_authorization,
-    pn_connection_get_container,
-    pn_connection_get_hostname,
-    pn_connection_get_user,
-    pn_connection_offered_capabilities,
-    pn_connection_open,
-    pn_connection_properties,
-    pn_connection_release,
-    pn_connection_remote_condition,
-    pn_connection_remote_container,
-    pn_connection_remote_desired_capabilities,
-    pn_connection_remote_hostname,
-    pn_connection_remote_offered_capabilities,
-    pn_connection_remote_properties,
-    pn_connection_set_authorization,
-    pn_connection_set_container,
-    pn_connection_set_hostname,
-    pn_connection_set_password,
-    pn_connection_set_user,
-    pn_connection_state,
-    pn_connection_transport,
-    pn_delivery,
-    pn_error_code,
-    pn_error_text,
-    pn_link_advance,
-    pn_link_attachments,
-    pn_link_available,
-    pn_link_close,
-    pn_link_condition,
-    pn_link_credit,
-    pn_link_current,
-    pn_link_detach,
-    pn_link_drain,
-    pn_link_drained,
-    pn_link_draining,
-    pn_link_error,
-    pn_link_flow,
-    pn_link_free,
-    pn_link_get_drain,
-    pn_link_head,
-    pn_link_is_receiver,
-    pn_link_is_sender,
-    pn_link_max_message_size,
-    pn_link_name,
-    pn_link_next,
-    pn_link_offered,
-    pn_link_open,
-    pn_link_properties,
-    pn_link_queued,
-    pn_link_rcv_settle_mode,
-    pn_link_recv,
-    pn_link_remote_condition,
-    pn_link_remote_max_message_size,
-    pn_link_remote_properties,
-    pn_link_remote_rcv_settle_mode,
-    pn_link_remote_snd_settle_mode,
-    pn_link_remote_source,
-    pn_link_remote_target,
-    pn_link_send,
-    pn_link_session,
-    pn_link_set_drain,
-    pn_link_set_max_message_size,
-    pn_link_set_rcv_settle_mode,
-    pn_link_set_snd_settle_mode,
-    pn_link_snd_settle_mode,
-    pn_link_source,
-    pn_link_state,
-    pn_link_target,
-    pn_link_unsettled,
-    pn_receiver,
-    pn_sender,
-    pn_session,
-    pn_session_attachments,
-    pn_session_close,
-    pn_session_condition,
-    pn_session_connection,
-    pn_session_free,
-    pn_session_get_incoming_capacity,
-    pn_session_get_outgoing_window,
-    pn_session_head,
-    pn_session_incoming_bytes,
-    pn_session_next,
-    pn_session_open,
-    pn_session_outgoing_bytes,
-    pn_session_remote_condition,
-    pn_session_set_incoming_capacity,
-    pn_session_set_outgoing_window,
-    pn_session_state,
-    pn_terminus_capabilities,
-    pn_terminus_copy,
-    pn_terminus_filter,
-    pn_terminus_get_address,
-    pn_terminus_get_distribution_mode,
-    pn_terminus_get_durability,
-    pn_terminus_get_expiry_policy,
-    pn_terminus_get_timeout,
-    pn_terminus_get_type,
-    pn_terminus_is_dynamic,
-    pn_terminus_outcomes,
-    pn_terminus_properties,
-    pn_terminus_set_address,
-    pn_terminus_set_distribution_mode,
-    pn_terminus_set_durability,
-    pn_terminus_set_dynamic,
-    pn_terminus_set_expiry_policy,
-    pn_terminus_set_timeout,
-    pn_terminus_set_type,
-)
+from cproton import PN_CONFIGURATION, PN_COORDINATOR, PN_DELIVERIES, PN_DIST_MODE_COPY, PN_DIST_MODE_MOVE, \
+    PN_DIST_MODE_UNSPECIFIED, PN_EOS, PN_EXPIRE_NEVER, PN_EXPIRE_WITH_CONNECTION, PN_EXPIRE_WITH_LINK, \
+    PN_EXPIRE_WITH_SESSION, PN_LOCAL_ACTIVE, PN_LOCAL_CLOSED, PN_LOCAL_UNINIT, PN_NONDURABLE, PN_RCV_FIRST, \
+    PN_RCV_SECOND, PN_REMOTE_ACTIVE, PN_REMOTE_CLOSED, PN_REMOTE_UNINIT, PN_SND_MIXED, PN_SND_SETTLED, PN_SND_UNSETTLED, \
+    PN_SOURCE, PN_TARGET, PN_UNSPECIFIED, pn_connection, pn_connection_attachments, pn_connection_close, \
+    pn_connection_collect, pn_connection_condition, pn_connection_desired_capabilities, pn_connection_error, \
+    pn_connection_get_authorization, pn_connection_get_container, pn_connection_get_hostname, pn_connection_get_user, \
+    pn_connection_offered_capabilities, \
+    pn_connection_open, pn_connection_properties, pn_connection_release, pn_connection_remote_condition, \
+    pn_connection_remote_container, pn_connection_remote_desired_capabilities, pn_connection_remote_hostname, \
+    pn_connection_remote_offered_capabilities, pn_connection_remote_properties, \
+    pn_connection_set_authorization, pn_connection_set_container, \
+    pn_connection_set_hostname, pn_connection_set_password, pn_connection_set_user, pn_connection_state, \
+    pn_connection_transport, pn_delivery, pn_error_code, pn_error_text, pn_link_advance, pn_link_attachments, \
+    pn_link_available, pn_link_close, pn_link_condition, pn_link_credit, pn_link_current, pn_link_detach, pn_link_drain, \
+    pn_link_drained, pn_link_draining, pn_link_error, pn_link_flow, pn_link_free, pn_link_get_drain, pn_link_head, \
+    pn_link_is_receiver, pn_link_is_sender, pn_link_max_message_size, pn_link_name, pn_link_next, pn_link_offered, \
+    pn_link_open, pn_link_queued, pn_link_rcv_settle_mode, pn_link_recv, pn_link_remote_condition, \
+    pn_link_remote_max_message_size, pn_link_remote_rcv_settle_mode, pn_link_remote_snd_settle_mode, \
+    pn_link_remote_source, pn_link_remote_target, pn_link_send, pn_link_session, pn_link_set_drain, \
+    pn_link_set_max_message_size, pn_link_set_rcv_settle_mode, pn_link_set_snd_settle_mode, pn_link_snd_settle_mode, \
+    pn_link_source, pn_link_state, pn_link_target, pn_link_unsettled, pn_receiver, pn_sender, pn_session, \
+    pn_session_attachments, pn_session_close, pn_session_condition, pn_session_connection, pn_session_free, \
+    pn_session_get_incoming_capacity, pn_session_get_outgoing_window, pn_session_head, pn_session_incoming_bytes, \
+    pn_session_next, pn_session_open, pn_session_outgoing_bytes, pn_session_remote_condition, \
+    pn_session_set_incoming_capacity, pn_session_set_outgoing_window, pn_session_state, pn_terminus_capabilities, \
+    pn_terminus_copy, pn_terminus_filter, pn_terminus_get_address, pn_terminus_get_distribution_mode, \
+    pn_terminus_get_durability, pn_terminus_get_expiry_policy, pn_terminus_get_timeout, pn_terminus_get_type, \
+    pn_terminus_is_dynamic, pn_terminus_outcomes, pn_terminus_properties, pn_terminus_set_address, \
+    pn_terminus_set_distribution_mode, pn_terminus_set_durability, pn_terminus_set_dynamic, \
+    pn_terminus_set_expiry_policy, pn_terminus_set_timeout, pn_terminus_set_type, \
+    pn_link_properties, pn_link_remote_properties, \
+    isnull
 
 from ._condition import cond2obj, obj2cond
-from ._data import (
-    Data,
-    PropertyDict,
-    SymbolList,
-    dat2obj,
-    obj2dat,
-)
+from ._data import Data, dat2obj, obj2dat, PropertyDict, SymbolList
 from ._delivery import Delivery
-from ._exceptions import (
-    EXCEPTIONS,
-    ConnectionException,
-    LinkException,
-    SessionException,
-)
+from ._exceptions import ConnectionException, EXCEPTIONS, LinkException, SessionException
 from ._handler import Handler
 from ._transport import Transport
 from ._wrapper import Wrapper
+from typing import Dict, List, Optional, Union, TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ._condition import Condition
@@ -241,14 +113,14 @@ class Endpoint(object):
     """ The remote endpoint state is closed. """
 
     def _init(self) -> None:
-        self.condition: Optional["Condition"] = None
+        self.condition: Optional['Condition'] = None
         self._handler: Optional[Handler] = None
 
     def _update_cond(self) -> None:
         obj2cond(self.condition, self._get_cond_impl())
 
     @property
-    def remote_condition(self) -> Optional["Condition"]:
+    def remote_condition(self) -> Optional['Condition']:
         """
         The remote condition associated with the connection endpoint.
         See :class:`Condition` for more information.
@@ -296,9 +168,7 @@ class Connection(Wrapper, Endpoint):
 
     def __init__(self, impl: Any = None) -> None:
         if impl is None:
-            Wrapper.__init__(
-                self, constructor=pn_connection, get_context=pn_connection_attachments
-            )
+            Wrapper.__init__(self, constructor=pn_connection, get_context=pn_connection_attachments)
         else:
             Wrapper.__init__(self, impl, pn_connection_attachments)
 
@@ -314,7 +184,7 @@ class Connection(Wrapper, Endpoint):
         return pn_connection_attachments(self._impl)
 
     @property
-    def connection(self) -> "Connection":
+    def connection(self) -> 'Connection':
         """
         Get this connection.
         """
@@ -342,7 +212,7 @@ class Connection(Wrapper, Endpoint):
         return pn_connection_remote_condition(self._impl)
 
     # TODO: Blacklisted API call
-    def collect(self, collector: "Collector") -> None:
+    def collect(self, collector: 'Collector') -> None:
         if collector is None:
             pn_connection_collect(self._impl, None)
         else:
@@ -508,12 +378,10 @@ class Connection(Wrapper, Endpoint):
         the ``ACTIVE`` state and triggers an open frame to be sent to the
         peer. A connection is fully active once both peers have opened it.
         """
-        obj2dat(
-            self.offered_capabilities, pn_connection_offered_capabilities(self._impl)
-        )
-        obj2dat(
-            self.desired_capabilities, pn_connection_desired_capabilities(self._impl)
-        )
+        obj2dat(self.offered_capabilities,
+                pn_connection_offered_capabilities(self._impl))
+        obj2dat(self.desired_capabilities,
+                pn_connection_desired_capabilities(self._impl))
         obj2dat(self.properties, pn_connection_properties(self._impl))
         pn_connection_open(self._impl)
 
@@ -527,7 +395,7 @@ class Connection(Wrapper, Endpoint):
         """
         self._update_cond()
         pn_connection_close(self._impl)
-        if hasattr(self, "_session_policy"):
+        if hasattr(self, '_session_policy'):
             # break circular ref
             del self._session_policy
         t = self.transport
@@ -554,7 +422,7 @@ class Connection(Wrapper, Endpoint):
         """
         return pn_connection_state(self._impl)
 
-    def session(self) -> "Session":
+    def session(self) -> 'Session':
         """
         Returns a new session on this connection.
 
@@ -567,7 +435,7 @@ class Connection(Wrapper, Endpoint):
         else:
             return Session(ssn)
 
-    def session_head(self, mask: int) -> Optional["Session"]:
+    def session_head(self, mask: int) -> Optional['Session']:
         """
         Retrieve the first session from a given connection that matches the
         specified state mask.
@@ -585,7 +453,7 @@ class Connection(Wrapper, Endpoint):
         """
         return Session.wrap(pn_session_head(self._impl, mask))
 
-    def link_head(self, mask: int) -> Optional[Union["Sender", "Receiver"]]:
+    def link_head(self, mask: int) -> Optional[Union['Sender', 'Receiver']]:
         """
         Retrieve the first link that matches the given state mask.
 
@@ -627,7 +495,7 @@ class Connection(Wrapper, Endpoint):
         pn_connection_release(self._impl)
 
     @property
-    def offered_capabilities(self) -> Optional[Union["Array", SymbolList]]:
+    def offered_capabilities(self) -> Optional[Union['Array', SymbolList]]:
         """Offered capabilities as a list of symbols. The AMQP 1.0 specification
         restricts this list to symbol elements only. It is possible to use
         the special ``list`` subclass :class:`SymbolList` as it will by
@@ -639,15 +507,13 @@ class Connection(Wrapper, Endpoint):
 
     @offered_capabilities.setter
     def offered_capabilities(
-        self,
-        offered_capability_list: Optional[
-            Union["Array", List["symbol"], SymbolList, List[str]]
-        ],
+            self,
+            offered_capability_list: Optional[Union['Array', List['symbol'], SymbolList, List[str]]]
     ) -> None:
         self.offered_capabilities_list = SymbolList(offered_capability_list)
 
     @property
-    def desired_capabilities(self) -> Optional[Union["Array", SymbolList]]:
+    def desired_capabilities(self) -> Optional[Union['Array', SymbolList]]:
         """Desired capabilities as a list of symbols. The AMQP 1.0 specification
         restricts this list to symbol elements only. It is possible to use
         the special ``list`` subclass :class:`SymbolList` which will by
@@ -658,10 +524,8 @@ class Connection(Wrapper, Endpoint):
 
     @desired_capabilities.setter
     def desired_capabilities(
-        self,
-        desired_capability_list: Optional[
-            Union["Array", List["symbol"], SymbolList, List[str]]
-        ],
+            self,
+            desired_capability_list: Optional[Union['Array', List['symbol'], SymbolList, List[str]]]
     ) -> None:
         self.desired_capabilities_list = SymbolList(desired_capability_list)
 
@@ -677,10 +541,7 @@ class Connection(Wrapper, Endpoint):
         return self.properties_dict
 
     @properties.setter
-    def properties(
-        self,
-        properties_dict: Optional[Union[PropertyDict, Dict[str, "PythonAMQPData"]]],
-    ) -> None:
+    def properties(self, properties_dict: Optional[Union[PropertyDict, Dict[str, 'PythonAMQPData']]]) -> None:
         if isinstance(properties_dict, dict):
             self.properties_dict = PropertyDict(properties_dict, raise_on_error=False)
         else:
@@ -689,7 +550,6 @@ class Connection(Wrapper, Endpoint):
 
 class Session(Wrapper, Endpoint):
     """A container of links"""
-
     @staticmethod
     def wrap(impl):
         if isnull(impl):
@@ -808,7 +668,7 @@ class Session(Wrapper, Endpoint):
         """
         return self.connection.transport
 
-    def sender(self, name: str) -> "Sender":
+    def sender(self, name: str) -> 'Sender':
         """
         Create a new :class:`Sender` on this session.
 
@@ -816,7 +676,7 @@ class Session(Wrapper, Endpoint):
         """
         return Sender(pn_sender(self._impl, name))
 
-    def receiver(self, name: str) -> "Receiver":
+    def receiver(self, name: str) -> 'Receiver':
         """
         Create a new :class:`Receiver` on this session.
 
@@ -927,7 +787,7 @@ class Link(Wrapper, Endpoint):
         return pn_link_state(self._impl)
 
     @property
-    def source(self) -> "Terminus":
+    def source(self) -> 'Terminus':
         """
         The source of the link as described by the local peer. The
         returned object is valid until the link is freed.
@@ -935,7 +795,7 @@ class Link(Wrapper, Endpoint):
         return Terminus(pn_link_source(self._impl))
 
     @property
-    def target(self) -> "Terminus":
+    def target(self) -> 'Terminus':
         """
         The target of the link as described by the local peer. The
         returned object is valid until the link is freed.
@@ -943,7 +803,7 @@ class Link(Wrapper, Endpoint):
         return Terminus(pn_link_target(self._impl))
 
     @property
-    def remote_source(self) -> "Terminus":
+    def remote_source(self) -> 'Terminus':
         """
         The source of the link as described by the remote peer. The
         returned object is valid until the link is freed. The remote
@@ -954,7 +814,7 @@ class Link(Wrapper, Endpoint):
         return Terminus(pn_link_remote_source(self._impl))
 
     @property
-    def remote_target(self) -> "Terminus":
+    def remote_target(self) -> 'Terminus':
         """
         The target of the link as described by the remote peer. The
         returned object is valid until the link is freed. The remote
@@ -1093,7 +953,7 @@ class Link(Wrapper, Endpoint):
         """
         return pn_link_queued(self._impl)
 
-    def next(self, mask: int) -> Optional[Union["Sender", "Receiver"]]:
+    def next(self, mask: int) -> Optional[Union['Sender', 'Receiver']]:
         """
         Retrieve the next link that matches the given state mask.
 
@@ -1273,9 +1133,7 @@ class Link(Wrapper, Endpoint):
         return self._properties_dict
 
     @properties.setter
-    def properties(
-        self, properties_dict: Optional[Dict["symbol", "PythonAMQPData"]]
-    ) -> None:
+    def properties(self, properties_dict: Optional[Dict['symbol', 'PythonAMQPData']]) -> None:
         if isinstance(properties_dict, dict):
             self._properties_dict = PropertyDict(properties_dict, raise_on_error=False)
         else:
@@ -1304,9 +1162,7 @@ class Sender(Link):
         """
         return self._check(pn_link_send(self._impl, data))
 
-    def send(
-        self, obj: Union[bytes, "Message"], tag: Optional[str] = None
-    ) -> Union[int, Delivery]:
+    def send(self, obj: Union[bytes, 'Message'], tag: Optional[str] = None) -> Union[int, Delivery]:
         """
         A convenience method to send objects as message content.
 
@@ -1317,7 +1173,7 @@ class Sender(Link):
         Where the object is a :class:`Message`, this will send the message over
         this link, creating a new delivery for the purpose.
         """
-        if hasattr(obj, "send"):
+        if hasattr(obj, 'send'):
             return obj.send(self, tag=tag)
         else:
             # treat object as bytes
@@ -1344,8 +1200,7 @@ class Sender(Link):
 
     def delivery_tag(self) -> str:
         """Increments and returns a counter to be used as the next message tag."""
-        if not hasattr(self, "tag_generator"):
-
+        if not hasattr(self, 'tag_generator'):
             def simple_tags():
                 count = 1
                 while True:
@@ -1419,7 +1274,6 @@ class Terminus(object):
     """
     A source or target for messages.
     """
-
     UNSPECIFIED = PN_UNSPECIFIED
     """A nonexistent terminus, may used as a source or target."""
     SOURCE = PN_SOURCE
@@ -1559,7 +1413,7 @@ class Terminus(object):
         Outcomes of the source or target.
 
         :type: :class:`Data` containing an array of :class:`symbol`.
-        """
+       """
         return Data(pn_terminus_outcomes(self._impl))
 
     @property
@@ -1573,7 +1427,7 @@ class Terminus(object):
         """
         return Data(pn_terminus_filter(self._impl))
 
-    def copy(self, src: "Terminus") -> None:
+    def copy(self, src: 'Terminus') -> None:
         """
         Copy another terminus object.
 

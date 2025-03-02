@@ -17,17 +17,10 @@
 # under the License.
 #
 
-from typing import TYPE_CHECKING, Optional
+from typing import Optional, TYPE_CHECKING
 
-from cproton import (
-    pn_condition_clear,
-    pn_condition_get_description,
-    pn_condition_get_name,
-    pn_condition_info,
-    pn_condition_is_set,
-    pn_condition_set_description,
-    pn_condition_set_name,
-)
+from cproton import pn_condition_clear, pn_condition_set_name, pn_condition_set_description, pn_condition_info, \
+    pn_condition_is_set, pn_condition_get_name, pn_condition_get_description
 
 from ._data import Data, dat2obj
 
@@ -65,28 +58,26 @@ class Condition:
     """
 
     def __init__(
-        self,
-        name: str,
-        description: Optional[str] = None,
-        info: Optional["PythonAMQPData"] = None,
+            self,
+            name: str,
+            description: Optional[str] = None,
+            info: Optional['PythonAMQPData'] = None
     ) -> None:
         self.name = name
         self.description = description
         self.info = info
 
     def __repr__(self) -> str:
-        return "Condition(%s)" % ", ".join(
-            [repr(x) for x in (self.name, self.description, self.info) if x]
-        )
+        return "Condition(%s)" % ", ".join([repr(x) for x in
+                                            (self.name, self.description, self.info)
+                                            if x])
 
-    def __eq__(self, o: "Condition") -> bool:
+    def __eq__(self, o: 'Condition') -> bool:
         if not isinstance(o, Condition):
             return False
-        return (
-            self.name == o.name
-            and self.description == o.description
-            and self.info == o.info
-        )
+        return self.name == o.name and \
+            self.description == o.description and \
+            self.info == o.info
 
 
 def obj2cond(obj, cond: Condition) -> None:
@@ -101,10 +92,8 @@ def obj2cond(obj, cond: Condition) -> None:
 
 def cond2obj(cond) -> Optional[Condition]:
     if pn_condition_is_set(cond):
-        return Condition(
-            pn_condition_get_name(cond),
-            pn_condition_get_description(cond),
-            dat2obj(pn_condition_info(cond)),
-        )
+        return Condition(pn_condition_get_name(cond),
+                         pn_condition_get_description(cond),
+                         dat2obj(pn_condition_info(cond)))
     else:
         return None

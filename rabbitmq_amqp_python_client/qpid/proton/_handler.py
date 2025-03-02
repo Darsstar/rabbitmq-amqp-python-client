@@ -18,24 +18,16 @@
 #
 
 
+from typing import Any, Callable, List, Optional, Tuple, Type, Union
 from types import TracebackType
-from typing import (
-    Any,
-    Callable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
 
 
 class LazyHandlers(object):
-    def __get__(self, obj: "Handler", clazz: Any) -> Union["LazyHandlers", List[Any]]:
+    def __get__(self, obj: 'Handler', clazz: Any) -> Union['LazyHandlers', List[Any]]:
         if obj is None:
             return self
         ret = []
-        obj.__dict__["handlers"] = ret
+        obj.__dict__['handlers'] = ret
         return ret
 
 
@@ -43,16 +35,13 @@ class Handler(object):
     """
     An abstract handler for events which supports child handlers.
     """
-
     handlers = LazyHandlers()
 
     # TODO What to do with on_error?
     def add(
-        self,
-        handler: Any,
-        on_error: Optional[
-            Callable[[Tuple[Type[BaseException], BaseException, "TracebackType"]], None]
-        ] = None,
+            self,
+            handler: Any,
+            on_error: Optional[Callable[[Tuple[Type[BaseException], BaseException, 'TracebackType']], None]] = None,
     ) -> None:
         """
         Add a child handler

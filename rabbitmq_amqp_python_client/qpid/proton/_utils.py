@@ -18,32 +18,19 @@
 #
 
 import collections
-import threading
 import time
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    List,
-    Optional,
-    Union,
-)
+import threading
 
+from ._exceptions import ProtonException, ConnectionException, LinkException, Timeout
 from ._delivery import Delivery
 from ._endpoints import Endpoint, Link
 from ._events import Handler
-from ._exceptions import (
-    ConnectionException,
-    LinkException,
-    ProtonException,
-    Timeout,
-)
-from ._handlers import (
-    IncomingMessageHandler,
-    MessagingHandler,
-)
-from ._reactor import Container
 from ._url import Url
+
+from ._reactor import Container
+from ._handlers import MessagingHandler, IncomingMessageHandler
+
+from typing import Callable, Optional, Union, TYPE_CHECKING, List, Any
 
 try:
     from typing import Literal
@@ -56,20 +43,13 @@ except ImportError:
     class Literal(metaclass=GenericMeta):
         pass
 
-
 if TYPE_CHECKING:
     from ._delivery import DispositionType
+    from ._transport import SSLDomain
+    from ._reactor import SenderOption, ReceiverOption, Connection, LinkOption, Backoff
     from ._endpoints import Receiver, Sender
     from ._events import Event
     from ._message import Message
-    from ._reactor import (
-        Backoff,
-        Connection,
-        LinkOption,
-        ReceiverOption,
-        SenderOption,
-    )
-    from ._transport import SSLDomain
 
 from typing import Annotated, TypeVar
 
@@ -78,25 +58,19 @@ CB = Annotated[Callable[[MT], None], "Message callback type"]
 
 
 class BlockingLink:
-    def __init__(
-        self, connection: "BlockingConnection", link: Union["Sender", "Receiver"]
-    ) -> None:
+    def __init__(self, connection: 'BlockingConnection', link: Union['Sender', 'Receiver']) -> None:
         self.connection = connection
         self.link = link
-        self.connection.wait(
-            lambda: not (self.link.state & Endpoint.REMOTE_UNINIT),
-            msg="Opening link %s" % link.name,
-        )
+        self.connection.wait(lambda: not (self.link.state & Endpoint.REMOTE_UNINIT),
+                             msg="Opening link %s" % link.name)
         self._checkClosed()
 
     def _waitForClose(self, timeout=1):
         try:
-            self.connection.wait(
-                lambda: self.link.state & Endpoint.REMOTE_CLOSED,
-                timeout=timeout,
-                msg="Opening link %s" % self.link.name,
-            )
-        except Timeout:
+            self.connection.wait(lambda: self.link.state & Endpoint.REMOTE_CLOSED,
+                                 timeout=timeout,
+                                 msg="Opening link %s" % self.link.name)
+        except Timeout as e:
             pass
         self._checkClosed()
 
@@ -111,10 +85,8 @@ class BlockingLink:
         Close the link.
         """
         self.link.close()
-        self.connection.wait(
-            lambda: not (self.link.state & Endpoint.REMOTE_ACTIVE),
-            msg="Closing link %s" % self.link.name,
-        )
+        self.connection.wait(lambda: not (self.link.state & Endpoint.REMOTE_ACTIVE),
+                             msg="Closing link %s" % self.link.name)
 
     # Access to other link attributes.
     def __getattr__(self, name: str) -> Any:
@@ -142,26 +114,20 @@ class BlockingSender(BlockingLink):
     :meth:`BlockingConnection.create_sender`.
     """
 
-    def __init__(self, connection: "BlockingConnection", sender: "Sender") -> None:
+    def __init__(self, connection: 'BlockingConnection', sender: 'Sender') -> None:
         super(BlockingSender, self).__init__(connection, sender)
-        if (
-            self.link.target
-            and self.link.target.address
-            and self.link.target.address != self.link.remote_target.address
-        ):
+        if self.link.target and self.link.target.address and self.link.target.address != self.link.remote_target.address:
             # this may be followed by a detach, which may contain an error condition, so wait a little...
             self._waitForClose()
             # ...but close ourselves if peer does not
             self.link.close()
-            raise LinkException(
-                "Failed to open sender %s, target does not match" % self.link.name
-            )
+            raise LinkException("Failed to open sender %s, target does not match" % self.link.name)
 
     def send(
-        self,
-        msg: "Message",
-        timeout: Union[None, Literal[False], float] = False,
-        error_states: Optional[List["DispositionType"]] = None,
+            self,
+            msg: 'Message',
+            timeout: Union[None, Literal[False], float] = False,
+            error_states: Optional[List['DispositionType']] = None,
     ) -> Delivery:
         """
         Blocking send which will return only when the send is complete
@@ -175,13 +141,9 @@ class BlockingSender(BlockingLink):
             will default to a list containing :const:`proton.Delivery.REJECTED` and :const:`proton.Delivery.RELEASED`.
         :return: Delivery object for this message.
         """
-
         delivery = self.link.send(msg)
-        self.connection.wait(
-            lambda: _is_settled(delivery),
-            msg="Sending on sender %s" % self.link.name,
-            timeout=timeout,
-        )
+        self.connection.wait(lambda: _is_settled(delivery), msg="Sending on sender %s" % self.link.name,
+                             timeout=timeout)
         if delivery.link.snd_settle_mode != Link.SND_SETTLED:
             delivery.settle()
         bad = error_states
@@ -197,23 +159,23 @@ class Fetcher(MessagingHandler):
     A message handler for blocking receivers.
     """
 
-    def __init__(self, connection: "Connection", prefetch: int):
+    def __init__(self, connection: 'Connection', prefetch: int):
         super(Fetcher, self).__init__(prefetch=prefetch, auto_accept=False)
         self.connection = connection
         self.incoming = collections.deque([])
         self.unsettled = collections.deque([])
 
-    def on_message(self, event: "Event") -> None:
+    def on_message(self, event: 'Event') -> None:
         self.incoming.append((event.message, event.delivery))
         self.connection.container.yield_()  # Wake up the wait() loop to handle the message.
 
-    def on_link_error(self, event: "Event") -> None:
+    def on_link_error(self, event: 'Event') -> None:
         if event.link.state & Endpoint.LOCAL_ACTIVE:
             event.link.close()
             if not self.connection.closing:
                 raise LinkDetached(event.link)
 
-    def on_connection_error(self, event: "Event") -> None:
+    def on_connection_error(self, event: 'Event') -> None:
         if not self.connection.closing:
             raise ConnectionClosed(event.connection)
 
@@ -225,7 +187,7 @@ class Fetcher(MessagingHandler):
         """
         return len(self.incoming)
 
-    def pop(self) -> "Message":
+    def pop(self) -> 'Message':
         """
         Get the next available incoming message. If the message is unsettled, its
         delivery object is moved onto the unsettled queue, and can be settled with
@@ -256,28 +218,21 @@ class BlockingReceiver(BlockingLink):
     """
 
     def __init__(
-        self,
-        connection: "BlockingConnection",
-        receiver: "Receiver",
-        fetcher: Optional[Fetcher],
-        credit: int = 1,
+            self,
+            connection: 'BlockingConnection',
+            receiver: 'Receiver',
+            fetcher: Optional[Fetcher],
+            credit: int = 1
     ) -> None:
         super(BlockingReceiver, self).__init__(connection, receiver)
-        if (
-            self.link.source
-            and self.link.source.address
-            and self.link.source.address != self.link.remote_source.address
-        ):
+        if self.link.source and self.link.source.address and self.link.source.address != self.link.remote_source.address:
             # this may be followed by a detach, which may contain an error condition, so wait a little...
             self._waitForClose()
             # ...but close ourselves if peer does not
             self.link.close()
-            raise LinkException(
-                "Failed to open receiver %s, source does not match" % self.link.name
-            )
+            raise LinkException("Failed to open receiver %s, source does not match" % self.link.name)
         if credit:
             receiver.flow(credit)
-
         self.fetcher = fetcher
         self.container = connection.container
 
@@ -289,7 +244,10 @@ class BlockingReceiver(BlockingLink):
         if hasattr(self, "container"):
             self.link.handler = None  # implicit call to reactor
 
-    def receive(self, timeout: Union[None, Literal[False], float] = False) -> "Message":
+    def receive(
+            self,
+            timeout: Union[None, Literal[False], float] = False
+    ) -> 'Message':
         """
         Blocking receive call which will return only when a message is received or
         a timeout (if supplied) occurs.
@@ -299,16 +257,11 @@ class BlockingReceiver(BlockingLink):
             If ``None``, there is no timeout. Any other value is treated as a timeout in seconds.
         """
         if not self.fetcher:
-            raise Exception(
-                "Can't call receive on this receiver as a handler was not provided"
-            )
+            raise Exception("Can't call receive on this receiver as a handler was not provided")
         if not self.link.credit:
             self.link.flow(1)
-        self.connection.wait(
-            lambda: self.fetcher.has_message,
-            msg="Receiving on receiver %s" % self.link.name,
-            timeout=timeout,
-        )
+        self.connection.wait(lambda: self.fetcher.has_message, msg="Receiving on receiver %s" % self.link.name,
+                             timeout=timeout)
         return self.fetcher.pop()
 
     def accept(self) -> None:
@@ -339,7 +292,7 @@ class BlockingReceiver(BlockingLink):
         else:
             self.settle(Delivery.RELEASED)
 
-    def settle(self, state: Optional["DispositionType"] = None):
+    def settle(self, state: Optional['DispositionType'] = None):
         """
         Settle any received messages.
 
@@ -349,9 +302,7 @@ class BlockingReceiver(BlockingLink):
             :class:`proton.Delivery`.
         """
         if not self.fetcher:
-            raise Exception(
-                "Can't call accept/reject etc on this receiver as a handler was not provided"
-            )
+            raise Exception("Can't call accept/reject etc on this receiver as a handler was not provided")
         self.fetcher.settle(state)
 
 
@@ -386,7 +337,7 @@ class ConnectionClosed(ConnectionException):
     :param connection: The connection which closed unexpectedly.
     """
 
-    def __init__(self, connection: "Connection") -> None:
+    def __init__(self, connection: 'Connection') -> None:
         self.connection = connection
         txt = "Connection %s closed" % connection.hostname
         if connection.remote_condition:
@@ -420,18 +371,17 @@ class BlockingConnection(Handler):
     """
 
     def __init__(
-        self,
-        url: Optional[Union[str, Url]] = None,
-        timeout: Optional[float] = None,
-        container: Optional[Container] = None,
-        ssl_domain: Optional["SSLDomain"] = None,
-        heartbeat: Optional[float] = None,
-        urls: Optional[List[str]] = None,
-        reconnect: Union[None, Literal[False], "Backoff"] = None,
-        on_disconnection_handler: Optional[CB] = None,
-        **kwargs
+            self,
+            url: Optional[Union[str, Url]] = None,
+            timeout: Optional[float] = None,
+            container: Optional[Container] = None,
+            ssl_domain: Optional['SSLDomain'] = None,
+            heartbeat: Optional[float] = None,
+            urls: Optional[List[str]] = None,
+            reconnect: Union[None, Literal[False], 'Backoff'] = None,
+            on_disconnection_handler: Optional[CB] = None,
+            **kwargs
     ) -> None:
-
         # Preserve previous behaviour if neither reconnect nor urls are supplied
         if urls is None:
             urls = []
@@ -458,7 +408,7 @@ class BlockingConnection(Handler):
                 reconnect=False,
                 heartbeat=heartbeat,
                 urls=None,
-                **kwargs
+                **kwargs,
             )
             try:
                 self.wait(
@@ -473,15 +423,11 @@ class BlockingConnection(Handler):
                 continue
 
     def create_sender(
-        self,
-        address: Optional[str],
-        handler: Optional[Handler] = None,
-        name: Optional[str] = None,
-        options: Optional[
-            Union[
-                "SenderOption", List["SenderOption"], "LinkOption", List["LinkOption"]
-            ]
-        ] = None,
+            self,
+            address: Optional[str],
+            handler: Optional[Handler] = None,
+            name: Optional[str] = None,
+            options: Optional[Union['SenderOption', List['SenderOption'], 'LinkOption', List['LinkOption']]] = None
     ) -> BlockingSender:
         """
         Create a blocking sender.
@@ -492,28 +438,17 @@ class BlockingConnection(Handler):
         :param options: A single option, or a list of sender options
         :return: New blocking sender instance.
         """
-        return BlockingSender(
-            self,
-            self.container.create_sender(
-                self.conn, address, name=name, handler=handler, options=options
-            ),
-        )
+        return BlockingSender(self, self.container.create_sender(self.conn, address, name=name, handler=handler,
+                                                                 options=options))
 
     def create_receiver(
-        self,
-        address: Optional[str] = None,
-        credit: Optional[int] = None,
-        dynamic: bool = False,
-        handler: Optional[Handler] = None,
-        name: Optional[str] = None,
-        options: Optional[
-            Union[
-                "ReceiverOption",
-                List["ReceiverOption"],
-                "LinkOption",
-                List["LinkOption"],
-            ]
-        ] = None,
+            self,
+            address: Optional[str] = None,
+            credit: Optional[int] = None,
+            dynamic: bool = False,
+            handler: Optional[Handler] = None,
+            name: Optional[str] = None,
+            options: Optional[Union['ReceiverOption', List['ReceiverOption'], 'LinkOption', List['LinkOption']]] = None
     ) -> BlockingReceiver:
         """
         Create a blocking receiver.
@@ -559,10 +494,8 @@ class BlockingConnection(Handler):
         try:
             if self.conn:
                 self.conn.close()
-                self.wait(
-                    lambda: not (self.conn.state & Endpoint.REMOTE_ACTIVE),
-                    msg="Closing connection",
-                )
+                self.wait(lambda: not (self.conn.state & Endpoint.REMOTE_ACTIVE),
+                          msg="Closing connection")
                 if self.conn.transport:
                     # Close tail to force transport cleanup without waiting/hanging for peer close frame.
                     self.conn.transport.close_tail()
@@ -596,10 +529,10 @@ class BlockingConnection(Handler):
         self.container.process()
 
     def wait(
-        self,
-        condition: Callable[[], bool],
-        timeout: Union[None, Literal[False], float] = False,
-        msg: Optional[str] = None,
+            self,
+            condition: Callable[[], bool],
+            timeout: Union[None, Literal[False], float] = False,
+            msg: Optional[str] = None
     ) -> None:
         """
         Process events until ``condition()`` returns ``True``.
@@ -631,10 +564,9 @@ class BlockingConnection(Handler):
                 self.container.timeout = container_timeout
         if self.disconnected and not self._is_closed():
             raise ConnectionException(
-                "Connection %s disconnected: %s" % (self.url, self.disconnected)
-            )
+                "Connection %s disconnected: %s" % (self.url, self.disconnected))
 
-    def on_link_remote_close(self, event: "Event") -> None:
+    def on_link_remote_close(self, event: 'Event') -> None:
         """
         Event callback for when the remote terminus closes.
         """
@@ -643,7 +575,7 @@ class BlockingConnection(Handler):
             if not self.closing:
                 raise LinkDetached(event.link)
 
-    def on_connection_remote_close(self, event: "Event") -> None:
+    def on_connection_remote_close(self, event: 'Event') -> None:
         """
         Event callback for when the link peer closes the connection.
         """
@@ -654,13 +586,13 @@ class BlockingConnection(Handler):
             if not self.closing:
                 raise ConnectionClosed(event.connection)
 
-    def on_transport_tail_closed(self, event: "Event") -> None:
+    def on_transport_tail_closed(self, event: 'Event') -> None:
         self.on_transport_closed(event)
 
-    def on_transport_head_closed(self, event: "Event") -> None:
+    def on_transport_head_closed(self, event: 'Event') -> None:
         self.on_transport_closed(event)
 
-    def on_transport_closed(self, event: "Event") -> None:
+    def on_transport_closed(self, event: 'Event') -> None:
         if not self.closing:
             self.disconnected = event.transport.condition or "unknown"
 
@@ -694,21 +626,17 @@ class SyncRequestResponse(IncomingMessageHandler):
 
     correlation_id = AtomicCount()
 
-    def __init__(
-        self, connection: BlockingConnection, address: Optional[str] = None
-    ) -> None:
+    def __init__(self, connection: BlockingConnection, address: Optional[str] = None) -> None:
         super(SyncRequestResponse, self).__init__()
         self.connection = connection
         self.address = address
         self.sender = self.connection.create_sender(self.address)
         # dynamic=true generates a unique address dynamically for this receiver.
         # credit=1 because we want to receive 1 response message initially.
-        self.receiver = self.connection.create_receiver(
-            None, dynamic=True, credit=1, handler=self
-        )
+        self.receiver = self.connection.create_receiver(None, dynamic=True, credit=1, handler=self)
         self.response = None
 
-    def call(self, request: "Message") -> "Message":
+    def call(self, request: 'Message') -> 'Message':
         """
         Send a request message, wait for and return the response message.
 
@@ -737,7 +665,7 @@ class SyncRequestResponse(IncomingMessageHandler):
         """
         return self.receiver.remote_source.address
 
-    def on_message(self, event: "Event") -> None:
+    def on_message(self, event: 'Event') -> None:
         """
         Called when we receive a message for our receiver.
 

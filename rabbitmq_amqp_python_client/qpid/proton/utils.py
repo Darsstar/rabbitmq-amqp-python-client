@@ -17,22 +17,14 @@
 # under the License.
 #
 
-from ._utils import (
-    BlockingConnection,
-    BlockingReceiver,
-    BlockingSender,
-    ConnectionClosed,
-    LinkDetached,
-    SendException,
-    SyncRequestResponse,
-)
+from ._utils import BlockingConnection, BlockingSender, BlockingReceiver, SyncRequestResponse, SendException, LinkDetached, ConnectionClosed
 
 __all__ = [
-    "BlockingConnection",
-    "BlockingSender",
-    "BlockingReceiver",
-    "SyncRequestResponse",
-    "SendException",
-    "LinkDetached",
-    "ConnectionClosed",
+    'BlockingConnection',
+    'BlockingSender',
+    'BlockingReceiver',
+    'SyncRequestResponse',
+    'SendException',
+    'LinkDetached',
+    'ConnectionClosed'
 ]

@@ -17,32 +17,22 @@
 # under the License.
 #
 
-from ._handlers import (
-    EndpointStateHandler,
-    FlowController,
-    Handshaker,
-    IncomingMessageHandler,
-    IOHandler,
-    MessagingHandler,
-    OutgoingMessageHandler,
-    PythonIO,
-    Reject,
-    Release,
-    TransactionalClientHandler,
-    TransactionHandler,
-)
+from ._handlers import MessagingHandler, IncomingMessageHandler, OutgoingMessageHandler, \
+    EndpointStateHandler, TransactionHandler, TransactionalClientHandler,\
+    Reject, Release,\
+    Handshaker, FlowController, IOHandler, PythonIO
 
 __all__ = [
-    "MessagingHandler",
-    "IncomingMessageHandler",
-    "OutgoingMessageHandler",
-    "EndpointStateHandler",
-    "TransactionHandler",
-    "TransactionalClientHandler",
-    "Reject",
-    "Release",
-    "Handshaker",
-    "FlowController",
-    "IOHandler",
-    "PythonIO",
+    'MessagingHandler',
+    'IncomingMessageHandler',
+    'OutgoingMessageHandler',
+    'EndpointStateHandler',
+    'TransactionHandler',
+    'TransactionalClientHandler',
+    'Reject',
+    'Release',
+    'Handshaker',
+    'FlowController',
+    'IOHandler',
+    'PythonIO'
 ]

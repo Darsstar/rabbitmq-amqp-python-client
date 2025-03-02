@@ -31,69 +31,19 @@ import logging
 import logging.config
 import os
 
-from cproton import (
-    PN_VERSION_MAJOR,
-    PN_VERSION_MINOR,
-    PN_VERSION_POINT,
-)
+from cproton import PN_VERSION_MAJOR, PN_VERSION_MINOR, PN_VERSION_POINT
 
 from ._condition import Condition
-from ._data import (
-    UNDESCRIBED,
-    AnnotationDict,
-    Array,
-    Data,
-    Described,
-    PropertyDict,
-    SymbolList,
-    byte,
-    char,
-    decimal32,
-    decimal64,
-    decimal128,
-    float32,
-    int32,
-    short,
-    symbol,
-    timestamp,
-    ubyte,
-    uint,
-    ulong,
-    ushort,
-)
+from ._data import UNDESCRIBED, Array, Data, Described, char, symbol, timestamp, ubyte, ushort, uint, ulong, \
+    byte, short, int32, float32, decimal32, decimal64, decimal128, AnnotationDict, PropertyDict, SymbolList
 from ._delivery import Delivery, Disposition
-from ._endpoints import (
-    Connection,
-    Endpoint,
-    Link,
-    Receiver,
-    Sender,
-    Session,
-    Terminus,
-)
+from ._endpoints import Endpoint, Connection, Session, Link, Receiver, Sender, Terminus
 from ._events import Collector, Event, EventType
-from ._exceptions import (
-    ConnectionException,
-    DataException,
-    Interrupt,
-    LinkException,
-    MessageException,
-    ProtonException,
-    SessionException,
-    SSLException,
-    SSLUnavailable,
-    Timeout,
-    TransportException,
-)
+from ._exceptions import ProtonException, MessageException, DataException, TransportException, \
+    SSLException, SSLUnavailable, ConnectionException, SessionException, LinkException, Timeout, Interrupt
 from ._handler import Handler
 from ._message import Message
-from ._transport import (
-    SASL,
-    SSL,
-    SSLDomain,
-    SSLSessionDetails,
-    Transport,
-)
+from ._transport import Transport, SASL, SSL, SSLDomain, SSLSessionDetails
 from ._url import Url
 
 __all__ = [
@@ -153,7 +103,7 @@ __all__ = [
     "float32",
     "decimal32",
     "decimal64",
-    "decimal128",
+    "decimal128"
 ]
 
 VERSION_MAJOR = PN_VERSION_MAJOR
@@ -166,7 +116,7 @@ IMPLEMENTATION_LANGUAGE = "C"
 
 handler = logging.NullHandler()
 
-logconfigfile = os.getenv("PNPY_LOGGER_CONFIG", None)
+logconfigfile = os.getenv('PNPY_LOGGER_CONFIG', None)
 if logconfigfile:
     logging.config.fileConfig(logconfigfile, None, False)
 else:

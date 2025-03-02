@@ -17,79 +17,31 @@
 # under the License.
 #
 
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    Optional,
-    Union,
-    overload,
-)
-from uuid import UUID
-
-from cproton import (
-    PN_DEFAULT_PRIORITY,
-    PN_OVERFLOW,
-    PN_UUID,
-    pn_error_text,
-    pn_message,
-    pn_message_annotations,
-    pn_message_body,
-    pn_message_clear,
-    pn_message_decode,
-    pn_message_encode,
-    pn_message_error,
-    pn_message_free,
-    pn_message_get_address,
-    pn_message_get_content_encoding,
-    pn_message_get_content_type,
-    pn_message_get_correlation_id,
-    pn_message_get_creation_time,
-    pn_message_get_delivery_count,
-    pn_message_get_expiry_time,
-    pn_message_get_group_id,
-    pn_message_get_group_sequence,
-    pn_message_get_id,
-    pn_message_get_priority,
-    pn_message_get_reply_to,
-    pn_message_get_reply_to_group_id,
-    pn_message_get_subject,
-    pn_message_get_ttl,
-    pn_message_get_user_id,
-    pn_message_instructions,
-    pn_message_is_durable,
-    pn_message_is_first_acquirer,
-    pn_message_is_inferred,
-    pn_message_properties,
-    pn_message_set_address,
-    pn_message_set_content_encoding,
-    pn_message_set_content_type,
-    pn_message_set_correlation_id,
-    pn_message_set_creation_time,
-    pn_message_set_delivery_count,
-    pn_message_set_durable,
-    pn_message_set_expiry_time,
-    pn_message_set_first_acquirer,
-    pn_message_set_group_id,
-    pn_message_set_group_sequence,
-    pn_message_set_id,
-    pn_message_set_inferred,
-    pn_message_set_priority,
-    pn_message_set_reply_to,
-    pn_message_set_reply_to_group_id,
-    pn_message_set_subject,
-    pn_message_set_ttl,
-    pn_message_set_user_id,
-)
+from cproton import PN_DEFAULT_PRIORITY, PN_STRING, PN_UUID, PN_OVERFLOW, pn_error_text, pn_message, \
+    pn_message_annotations, pn_message_body, pn_message_clear, pn_message_decode, \
+    pn_message_encode, pn_message_error, pn_message_free, pn_message_get_address, pn_message_get_content_encoding, \
+    pn_message_get_content_type, pn_message_get_correlation_id, pn_message_get_creation_time, pn_message_get_delivery_count, \
+    pn_message_get_expiry_time, pn_message_get_group_id, pn_message_get_group_sequence, pn_message_get_id, pn_message_get_priority, \
+    pn_message_get_reply_to, pn_message_get_reply_to_group_id, pn_message_get_subject, pn_message_get_ttl, \
+    pn_message_get_user_id, pn_message_instructions, pn_message_is_durable, \
+    pn_message_is_first_acquirer, pn_message_is_inferred, pn_message_properties, pn_message_set_address, \
+    pn_message_set_content_encoding, pn_message_set_content_type, pn_message_set_correlation_id, pn_message_set_creation_time, \
+    pn_message_set_delivery_count, pn_message_set_durable, pn_message_set_expiry_time, pn_message_set_first_acquirer, \
+    pn_message_set_group_id, pn_message_set_group_sequence, pn_message_set_id, pn_message_set_inferred, pn_message_set_priority, \
+    pn_message_set_reply_to, pn_message_set_reply_to_group_id, pn_message_set_subject, \
+    pn_message_set_ttl, pn_message_set_user_id
 
 from ._common import millis2secs, secs2millis
-from ._data import AnnotationDict, Data, char, symbol, ulong
+from ._data import char, Data, symbol, ulong, AnnotationDict
 from ._endpoints import Link
 from ._exceptions import EXCEPTIONS, MessageException
+from uuid import UUID
+from typing import Dict, Optional, Union, TYPE_CHECKING, overload
 
 if TYPE_CHECKING:
-    from proton._data import Described, PythonAMQPData
     from proton._delivery import Delivery
-    from proton._endpoints import Receiver, Sender
+    from proton._endpoints import Sender, Receiver
+    from proton._data import Described, PythonAMQPData
 
 
 class Message(object):
@@ -110,11 +62,9 @@ class Message(object):
     """ Default AMQP message priority"""
 
     def __init__(
-        self,
-        body: Union[
-            bytes, str, dict, list, int, float, "UUID", "Described", None
-        ] = None,
-        **kwargs
+            self,
+            body: Union[bytes, str, dict, list, int, float, 'UUID', 'Described', None] = None,
+            **kwargs
     ) -> None:
         self._msg = pn_message()
         self.instructions = None
@@ -140,6 +90,7 @@ class Message(object):
     def _check_property_keys(self) -> None:
         """
         AMQP allows only string keys for properties. This function checks that this requirement is met
+        and raises a MessageException if not. However, in certain cases, conversions to string are
         automatically performed:
 
         1. When a key is a user-defined (non-AMQP) subclass of str.
@@ -154,19 +105,13 @@ class Message(object):
                 # strings and their subclasses
                 if type(k) is symbol or type(k) is char:
                     # Exclude symbol and char
-                    raise MessageException(
-                        "Application property key is not string type: key=%s %s"
-                        % (str(k), type(k))
-                    )
+                    raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
                 if type(k) is not str:
                     # Only for string subclasses, convert to string
                     changed_keys.append((k, str(k)))
             else:
                 # Anything else: raise exception
-                raise MessageException(
-                    "Application property key is not string type: key=%s %s"
-                    % (str(k), type(k))
-                )
+                raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
         # Make the key changes
         for old_key, new_key in changed_keys:
             self.properties[new_key] = self.properties.pop(old_key)
@@ -312,7 +257,7 @@ class Message(object):
         self._check(pn_message_set_delivery_count(self._msg, value))
 
     @property
-    def id(self) -> Optional[Union[str, bytes, "UUID", ulong]]:
+    def id(self) -> Optional[Union[str, bytes, 'UUID', ulong]]:
         """The globally unique id of the message, and can be used
         to determine if a received message is a duplicate. The allowed
         types to set the id are:
@@ -331,7 +276,7 @@ class Message(object):
         return value
 
     @id.setter
-    def id(self, value: Optional[Union[str, bytes, "UUID", int]]) -> None:
+    def id(self, value: Optional[Union[str, bytes, 'UUID', int]]) -> None:
         pn_message_set_id(self._msg, value)
 
     @property
@@ -383,7 +328,7 @@ class Message(object):
         self._check(pn_message_set_reply_to(self._msg, value))
 
     @property
-    def correlation_id(self) -> Optional[Union["UUID", ulong, str, bytes]]:
+    def correlation_id(self) -> Optional[Union['UUID', ulong, str, bytes]]:
         """The correlation-id for the message.
 
         :type: The valid AMQP types for a correlation-id are one of:
@@ -400,7 +345,7 @@ class Message(object):
         return value
 
     @correlation_id.setter
-    def correlation_id(self, value: Optional[Union[str, bytes, "UUID", int]]) -> None:
+    def correlation_id(self, value: Optional[Union[str, bytes, 'UUID', int]]) -> None:
         pn_message_set_correlation_id(self._msg, value)
 
     @property
@@ -502,9 +447,7 @@ class Message(object):
         return self.instruction_dict
 
     @instructions.setter
-    def instructions(
-        self, instructions: Optional[Dict[Union[str, int], "PythonAMQPData"]]
-    ) -> None:
+    def instructions(self, instructions: Optional[Dict[Union[str, int], 'PythonAMQPData']]) -> None:
         if isinstance(instructions, dict):
             self.instruction_dict = AnnotationDict(instructions, raise_on_error=False)
         else:
@@ -525,9 +468,7 @@ class Message(object):
         return self.annotation_dict
 
     @annotations.setter
-    def annotations(
-        self, annotations: Optional[Dict[Union[str, int], "PythonAMQPData"]]
-    ) -> None:
+    def annotations(self, annotations: Optional[Dict[Union[str, int], 'PythonAMQPData']]) -> None:
         if isinstance(annotations, dict):
             self.annotation_dict = AnnotationDict(annotations, raise_on_error=False)
         else:
@@ -568,7 +509,7 @@ class Message(object):
         self._check(pn_message_decode(self._msg, data))
         self._post_decode()
 
-    def send(self, sender: "Sender", tag: Optional[str] = None) -> "Delivery":
+    def send(self, sender: 'Sender', tag: Optional[str] = None) -> 'Delivery':
         """
         Encodes and sends the message content using the specified sender,
         and, if present, using the specified tag. Upon success, will
@@ -593,9 +534,10 @@ class Message(object):
         return dlv
 
     @overload
-    def recv(self, link: "Sender") -> None: ...
+    def recv(self, link: 'Sender') -> None:
+        ...
 
-    def recv(self, link: "Receiver") -> Optional["Delivery"]:
+    def recv(self, link: 'Receiver') -> Optional['Delivery']:
         """
         Receives and decodes the message content for the current :class:`Delivery`
         from the link. Upon success it will return the current delivery
@@ -623,26 +565,11 @@ class Message(object):
 
     def __repr__(self) -> str:
         props = []
-        for attr in (
-            "inferred",
-            "address",
-            "reply_to",
-            "durable",
-            "ttl",
-            "priority",
-            "first_acquirer",
-            "delivery_count",
-            "id",
-            "correlation_id",
-            "user_id",
-            "group_id",
-            "group_sequence",
-            "reply_to_group_id",
-            "instructions",
-            "annotations",
-            "properties",
-            "body",
-        ):
+        for attr in ("inferred", "address", "reply_to", "durable", "ttl",
+                     "priority", "first_acquirer", "delivery_count", "id",
+                     "correlation_id", "user_id", "group_id", "group_sequence",
+                     "reply_to_group_id", "instructions", "annotations",
+                     "properties", "body"):
             value = getattr(self, attr)
             if value:
                 props.append("%s=%r" % (attr, value))
